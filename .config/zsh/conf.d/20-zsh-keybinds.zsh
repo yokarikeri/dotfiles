@@ -15,8 +15,8 @@ zmodload -F zsh/terminfo +b:echoti +p:terminfo
 typeset -gA key_info
 key_info=(
   Control         '\C-'
-  ControlLeft     '\e[1;5D \e[5D \e\e[D \eOd \eOD'
-  ControlRight    '\e[1;5C \e[5C \e\e[C \eOc \eOC'
+  ControlLeft     '\e[1;5D \e[5D \e\e[D \eOd'
+  ControlRight    '\e[1;5C \e[5C \e\e[C \eOc'
   ControlPageUp   '\e[5;5~'
   ControlPageDown '\e[6;5~'
   Escape          '\e'
