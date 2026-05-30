@@ -1,0 +1,58 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Indent size 4
+[*.{py,java,cs,php,rs,kt,kts,swift}]
+indent_size = 4
+
+# Hard tab style
+[{Makefile,*.go,*.tsv}]
+indent_style = tab
+
+# Markdown: preserve trailing two spaces for line breaks
+# Patch/diff files: no byte changes allowed
+# Test snapshots: preserve expected values as-is
+# TSV: Separator required
+[*.{md,patch,diff,snap,tsv}]
+trim_trailing_whitespace = false
+
+# Visual Studio
+[*.sln]
+charset = utf-8-bom
+end_of_line = crlf
+
+# PowerShell: prevent garbled characters in PowerShell 5
+[*.{ps1,psm1,psd1}]
+charset = utf-8-bom
+
+# CSV: for Excel (optional)
+# [*.csv]
+# charset = utf-8-bom
+
+# Windows batch files / registry
+[*.{bat,cmd,reg}]
+end_of_line = crlf
+charset = unset
+
+# Minified files: do nothing
+[*.min.{js,css}]
+indent_style = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
+# Auto-generated lock files: do nothing
+[package-lock.json]
+indent_style = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
