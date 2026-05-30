@@ -55,5 +55,11 @@ make_link "$HOME/.zshenv" "$REPO_DIR/.zshenv"
 # ~/.config/zsh -> <repo>/.config/zsh
 make_link "$HOME/.config/zsh" "$REPO_DIR/.config/zsh"
 
+# ~/.local/bin/<script> -> <repo>/.local/bin/<script>  (one symlink per file)
+mkdir -p "$HOME/.local/bin"
+for src in "$REPO_DIR/.local/bin/"*; do
+  make_link "$HOME/.local/bin/$(basename "$src")" "$src"
+done
+
 printf '\nDone. Open a new shell to apply the configuration.\n'
 printf 'On the first start, zsh-users plugins will be cloned automatically.\n\n'

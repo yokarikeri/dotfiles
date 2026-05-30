@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+# @(#) wslvar - Get a Windows environment variable
+
+show_usage() {
+  echo "Usage: $(basename "$0") <Windows_Environment_Variable_Name>"
+  echo "Example: $(basename "$0") USERPROFILE"
+}
+
+find_in_win_drives() {
+  local -r _relative_path="${1#/}"
+  local _mnt_point _full_path
+  for _mnt_point in $(LANG=C df -T | awk '$2 == "9p" && $1 ~ /^[A-Z]:\\$/ {print $NF}'); do
+    _full_path="$_mnt_point/$_relative_path"
+    test -x "$_full_path" && echo "$_full_path" && return 0
+  done
+  return 1
+}
+
+get_win_env() {
+  local -r _win_env_var="$1"
+  local -r _cmd_exe="$(find_in_win_drives Windows/System32/cmd.exe)"
+  # WSLENV is cumbersome, so I don't use it.
+  if test -x "$_cmd_exe"; then
+    "$_cmd_exe" /c "echo %$_win_env_var%" 2>/dev/null | tr -d '\r'
+  fi
+}
+
+main() {
+  if [[ $# -eq 0 ]]; then
+    show_usage
+    exit 1
+  fi
+
+  get_win_env "$*"
+}
+
+main "$@"

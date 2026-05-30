@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+# @(#) wslview - Open URLs and files in Windows using Start-Process
+
+readonly URL_PATTERN='^[a-zA-Z0-9.+_-]+://'
+
+show_usage() {
+  printf 'Usage: %s <URL_or_FilePath>\n' "$(basename "$0")"
+}
+
+find_in_win_drives() {
+  local -r relative_path="${1#/}"
+  local mnt_point full_path
+  for mnt_point in $(LANG=C df -T | awk '$2 == "9p" && $1 ~ /^[A-Z]:\\$/ {print $NF}'); do
+    full_path="$mnt_point/$relative_path"
+    test -x "$full_path" && echo "$full_path" && return 0
+  done
+  return 1
+}
+
+get_windows_target() {
+  local -r target="$1"
+  local -r wslpath_exe="$2"
+
+  if [[ ! "$target" =~ $URL_PATTERN && -e "$target" && -x "$wslpath_exe" ]]; then
+    "$wslpath_exe" -w "$target" 2>/dev/null
+    return
+  fi
+  echo "$target"
+}
+
+get_oem_code_page() {
+  local -r reg_exe="$1"
+  local oem_cp
+
+  [[ -x "$reg_exe" ]] && oem_cp=$("$reg_exe" query "HKLM\SYSTEM\CurrentControlSet\Control\Nls\CodePage" /v OEMCP 2>&1 | grep -o '[0-9]\+')
+
+  echo "${oem_cp:-65001}"
+}
+
+open_with_powershell() {
+  local -r powershell_exe="$1"
+  local -r win_target="$2"
+  local -r oem_cp="$3"
+  local -r win_target_esc="${win_target//\'/\'\'}"
+
+  if [[ ! -x "$powershell_exe" ]]; then
+    printf 'Error: powershell.exe not found at %s\n' "$powershell_exe" >&2
+    return 1
+  fi
+
+  "$powershell_exe" \
+    -NoProfile \
+    -NonInteractive \
+    -ExecutionPolicy Bypass \
+    -Command "
+      [Console]::InputEncoding = [System.Text.Encoding]::GetEncoding(${oem_cp});
+      [Console]::OutputEncoding = [System.Text.Encoding]::UTF8;
+      Start-Process '${win_target_esc}';
+    "
+}
+
+main() {
+  if [[ $# -eq 0 ]]; then
+    show_usage
+    exit 1
+  fi
+
+  local -r target="$*"
+  local -r reg_exe="$(find_in_win_drives 'Windows/System32/reg.exe')"
+  local -r powershell_exe="$(find_in_win_drives 'Windows/System32/WindowsPowerShell/v1.0/powershell.exe')"
+  local -r wslpath_exe="/usr/bin/wslpath"
+
+  local -r win_target="$(get_windows_target "$target" "$wslpath_exe")"
+  local -r oem_cp="$(get_oem_code_page "$reg_exe")"
+
+  open_with_powershell "$powershell_exe" "$win_target" "$oem_cp" || exit 1
+}
+
+main "$@"

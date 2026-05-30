@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# @(#) Copy Claude's entire conversation to clipboard
+
+PROJ_DIR="${1:-$HOME/.claude/projects/$(printf '%s' "$PWD" | sed 's|/|-|g')}"
+JSONL="$(ls -t "$PROJ_DIR"/*.jsonl 2>/dev/null | head -1)"
+[ -z "$JSONL" ] && { echo "No session jsonl found under $PROJ_DIR" >&2; exit 1; }
+
+jq -r '
+  if .type == "user"
+    and (.isMeta != true)
+    and (.message.content | type) == "string"
+  then
+    "\n---\n\n█ PROMPT:\n\n``````markdown\n" + .message.content + "\n``````\n"
+  elif .type == "assistant"
+      and (.message.content | type) == "array"
+  then
+    .message.content[]
+    | if .type == "text" then
+        "\n█ RESPONSE:\n\n" + .text + "\n"
+      elif .type == "tool_use" and .name == "Bash" then
+        "\n█ tool_use: Bash\n\n```sh\n# " + (.input.description // "") + "\n" + (.input.command // "") + "\n```\n"
+      else empty end
+  else empty end
+' "$JSONL" | clip.exe
