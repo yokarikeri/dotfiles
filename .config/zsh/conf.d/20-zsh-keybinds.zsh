@@ -73,7 +73,6 @@ bindkey ' ' magic-space
 bindkey -M emacs -r '^K'
 
 # Remove redundant default bindings.
-bindkey -M emacs -r '^M'   # accept-line (duplicate of ^J)
 bindkey -M emacs -r '^Xu'  # undo (duplicate of ^_)
 bindkey -M emacs -r '^X^U' # undo (duplicate of ^_)
 bindkey -M emacs -r '^[Q'  # push-line (duplicate of ^q)
