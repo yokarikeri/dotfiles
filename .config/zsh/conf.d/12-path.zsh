@@ -33,5 +33,6 @@ readonly _USER_ZSH_COMPLETIONS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/sit
 typeset -gU fpath
 fpath=(
   $_USER_ZSH_COMPLETIONS_DIR(N/)
+  /usr/share/zsh/site-functions(N/)
   $fpath
 )
