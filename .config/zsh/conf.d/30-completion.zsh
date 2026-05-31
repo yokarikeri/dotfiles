@@ -62,7 +62,7 @@ zstyle ':completion:*' matcher-list \
 zstyle ':completion:*' insert-tab false
 
 # Show a navigable menu and group matches with headers.
-zstyle ':completion:*:*:*:*:*' menu select
+zstyle ':completion:*:*:*:*:*'  menu select
 zstyle ':completion:*:matches'  group yes
 zstyle ':completion:*:options'  description yes
 zstyle ':completion:*:options'  auto-description '%d'
@@ -70,18 +70,17 @@ zstyle ':completion:*'          group-name ''
 zstyle ':completion:*'          verbose yes
 
 # Colored format strings for each completion category.
-zstyle ':completion:*:corrections' format '%F{green}-- %d (errors: %e) --%f'
+zstyle ':completion:*:corrections'  format '%F{green}-- %d (errors: %e) --%f'
 zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
-zstyle ':completion:*:messages'    format '%F{purple}-- %d --%f'
-zstyle ':completion:*:warnings'    format '%F{red}-- no matches found --%f'
+zstyle ':completion:*:messages'     format '%F{purple}-- %d --%f'
+zstyle ':completion:*:warnings'     format '%F{red}-- no matches found --%f'
 
 # Fuzzy completer: attempt approximate matching after exact and prefix matching.
 zstyle ':completion:*' completer _complete _match _approximate
 zstyle ':completion:*:match:*'       original only
 zstyle ':completion:*:approximate:*' max-errors 1 numeric
 # Scale max-errors with word length, capped at 7 to avoid hangs.
-zstyle -e ':completion:*:approximate:*' max-errors \
-  'reply=($((($#PREFIX+$#SUFFIX)/3>7?7:($#PREFIX+$#SUFFIX)/3))numeric)'
+zstyle -e ':completion:*:approximate:*' max-errors 'reply=($((($#PREFIX+$#SUFFIX)/3>7?7:($#PREFIX+$#SUFFIX)/3))numeric)'
 
 # Skip internal functions and prompt helpers from completion.
 zstyle ':completion:*:functions' ignored-patterns '(_*|pre(cmd|exec)|prompt_*)'
@@ -90,10 +89,10 @@ zstyle ':completion:*:functions' ignored-patterns '(_*|pre(cmd|exec)|prompt_*)'
 zstyle ':completion:*:*:-subscript-:*' tag-order 'indexes' 'parameters'
 
 # Directory completion ordering.
-zstyle ':completion:*:*:cd:*'               tag-order local-directories directory-stack path-directories
+zstyle ':completion:*:*:cd:*'                 tag-order local-directories directory-stack path-directories
 zstyle ':completion:*:*:cd:*:directory-stack' menu yes select
-zstyle ':completion:*:-tilde-:*'            group-order 'named-directories' 'path-directories' 'users' 'expand'
-zstyle ':completion:*'                      squeeze-slashes true
+zstyle ':completion:*:-tilde-:*'              group-order 'named-directories' 'path-directories' 'users' 'expand'
+zstyle ':completion:*'                        squeeze-slashes true
 
 # History word completion.
 zstyle ':completion:*:history-words' stop yes
@@ -130,5 +129,21 @@ zstyle ':completion:*:*:kill:*' force-list always
 zstyle ':completion:*:*:kill:*' insert-ids single
 
 # Man page completion split by section.
-zstyle ':completion:*:manuals'        separate-sections true
+zstyle ':completion:*:manuals'       separate-sections true
 zstyle ':completion:*:manuals.(^1*)' insert-sections true
+
+# ================================
+#  (This MUST be done AFTER `compinit`.)
+#  Bash-compatible completion system (bashcompinit)
+#  https://zsh.sourceforge.io/Doc/Release/Completion-System.html#index-compinit
+# ================================
+
+# Enable compatibility with the bash completion system
+# https://zsh.sourceforge.io/Doc/Release/Completion-System.html#index-bashcompinit
+autoload -Uz bashcompinit && bashcompinit
+
+# AWS CLI 2
+# https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-completion.html#cli-command-completion-linux
+if (( ${+commands[aws]} && ${+commands[aws_completer]} )); then
+  complete -C "$commands[aws_completer]" aws
+fi
