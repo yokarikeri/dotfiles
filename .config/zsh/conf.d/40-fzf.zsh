@@ -55,7 +55,7 @@ FZF_DEFAULT_OPTS="--height 50% --min-height 10 --border --margin 1 --padding 1 \
 # https://zsh.sourceforge.io/Doc/Release/Parameters.html#Parameters-Used-By-The-Shell-1
 function _fzf_sanitize_bracketed_paste {
   if (( $+zle_bracketed_paste )); then
-    print $zle_bracketed_paste[2]   # ESC[?2004l — disable bracketed paste
+    print -n $zle_bracketed_paste[2]   # ESC[?2004l — disable bracketed paste
   fi
 }
 
