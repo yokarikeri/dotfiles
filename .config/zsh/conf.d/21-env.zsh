@@ -40,5 +40,4 @@ export TIME_STYLE='+%F %a %T'
 # export TIME_STYLE='+%F %a %T %Z'
 
 # Open URLs in the default Windows browser from WSL.
-# https://learn.microsoft.com/en-us/windows/wsl/filesystems
 (( $+commands[wslview] )) && export BROWSER='wslview'

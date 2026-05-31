@@ -4,12 +4,16 @@
 # ================================
 
 # typeset flags used below:
+# https://zsh.sourceforge.io/Doc/Release/Shell-Builtin-Commands.html#index-typeset
 #   -g ... global scope
 #   -U ... keep only the first occurrence of each duplicated value
 #
 # Glob qualifiers used in path expressions:
-#   (N) ... null glob — skip if the path does not exist
-#   (/) ... directories only
+# https://zsh.sourceforge.io/Doc/Release/Expansion.html#Glob-Qualifiers
+#   (N) ... Null glob (Do not add paths that do not exist.)
+#   (.) ... files
+#   (/) ... directories
+#   (-) ... follow symbolic links
 
 # path / PATH
 # https://zsh.sourceforge.io/Doc/Release/Parameters.html#index-path

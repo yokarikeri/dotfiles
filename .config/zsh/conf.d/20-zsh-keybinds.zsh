@@ -73,6 +73,7 @@ bindkey ' ' magic-space
 bindkey -M emacs -r '^K'
 
 # Remove redundant default bindings.
+bindkey -M emacs -r '^M'   # accept-line (duplicate of ^J)
 bindkey -M emacs -r '^Xu'  # undo (duplicate of ^_)
 bindkey -M emacs -r '^X^U' # undo (duplicate of ^_)
 bindkey -M emacs -r '^[Q'  # push-line (duplicate of ^q)
@@ -112,17 +113,6 @@ function glob-alias {
 }
 zle -N glob-alias
 bindkey -M emacs '^x^a' glob-alias
-
-# C-I (Tab): redisplay the prompt after completion on Zsh < 5.3.
-autoload -Uz is-at-least && if ! is-at-least 5.3; then
-  expand-or-complete-with-redisplay() {
-    print -n ...
-    zle expand-or-complete
-    zle redisplay
-  }
-  zle -N expand-or-complete-with-redisplay
-  bindkey -M emacs '^I' expand-or-complete-with-redisplay
-fi
 
 # Automatically escape URLs pasted into the command line.
 autoload -Uz bracketed-paste-url-magic && zle -N bracketed-paste bracketed-paste-url-magic

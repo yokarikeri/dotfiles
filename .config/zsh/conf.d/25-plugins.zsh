@@ -38,7 +38,6 @@ function _zsh_plugin_source {
 #
 #  Only adds its completion functions to fpath; must come before compinit.
 # ================================
-if _zsh_plugin_dir zsh-completions \
-     'https://github.com/zsh-users/zsh-completions.git'; then
+if _zsh_plugin_dir zsh-completions 'https://github.com/zsh-users/zsh-completions.git'; then
   fpath=("$REPLY/src" $fpath)
 fi

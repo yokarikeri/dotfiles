@@ -6,6 +6,21 @@
 #  as lightweight alternatives to atuin and zoxide.
 # ================================
 
+# User-Defined Widgets
+# https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#User_002dDefined-Widgets-1
+# - BUFFER (scalar) ... The entire contents of the edit buffer.
+# - CURSOR (integer) ... The offset of the cursor, within the edit buffer.
+# - LBUFFER (scalar) ... The part of the buffer that lies to the left of the cursor position.
+
+# history - The zsh/parameter Module
+# https://zsh.sourceforge.io/Doc/Release/Zsh-Modules.html#index-history-2
+
+# Standard Widgets > Miscellaneous
+# https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Miscellaneous-1
+# - clear-screen (^L ESC-^L) ... Clear the screen, remaining in incremental search mode.
+# - redisplay (unbound) ... Redisplays the edit buffer.
+# - reset-prompt (unbound) ... Force the prompts on both the left and right of the screen to be re-expanded, then redisplay the edit buffer.
+
 # ================================
 #  cdr — Recent Directory Tracking
 #  http://zsh.sourceforge.net/Doc/Release/User-Contributions.html#index-cdr
@@ -15,15 +30,13 @@ autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
 add-zsh-hook chpwd chpwd_recent_dirs
 
 zstyle ':completion:*:*:cdr:*:*' menu selection
-zstyle ':completion:*'            recent-dirs-insert both
-zstyle ':chpwd:*'                 recent-dirs-default true
-zstyle ':chpwd:*'                 recent-dirs-pushd true
-zstyle ':chpwd:*'                 recent-dirs-max 500
-zstyle ':chpwd:*'                 recent-dirs-file \
-  "${XDG_CACHE_HOME:-$HOME/.cache}/shell/chpwd-recent-dirs"
+zstyle ':completion:*'           recent-dirs-insert both
+zstyle ':chpwd:*'                recent-dirs-default true
+zstyle ':chpwd:*'                recent-dirs-pushd true
+zstyle ':chpwd:*'                recent-dirs-max 500
+zstyle ':chpwd:*'                recent-dirs-file "${XDG_CACHE_HOME:-$HOME/.cache}/shell/chpwd-recent-dirs"
 
-[[ -d "${XDG_CACHE_HOME:-$HOME/.cache}/shell" ]] || \
-  mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/shell"
+[[ -d "${XDG_CACHE_HOME:-$HOME/.cache}/shell" ]] || mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/shell"
 
 # ================================
 #  fzf default options
@@ -38,6 +51,8 @@ FZF_DEFAULT_OPTS="--height 50% --min-height 10 --border --margin 1 --padding 1 \
 #  Helper: disable bracketed paste while fzf is running
 # ================================
 
+# Safe multi-line pasting into terminal emulators
+# https://zsh.sourceforge.io/Doc/Release/Parameters.html#Parameters-Used-By-The-Shell-1
 function _fzf_sanitize_bracketed_paste {
   if (( $+zle_bracketed_paste )); then
     print $zle_bracketed_paste[2]   # ESC[?2004l — disable bracketed paste
@@ -49,29 +64,17 @@ function _fzf_sanitize_bracketed_paste {
 # ================================
 
 function fzf_history_selection {
+  (( $+commands[highlight] )) || return
   _fzf_sanitize_bracketed_paste
   local _history_num
-  if (( $+commands[highlight] )); then
-    _history_num="$(
-      export FZF_DEFAULT_OPTS; LANG=C
-      fc -lr 1 | highlight --syntax shellscript --out-format ansi \
-        | fzf --ansi --border-label '╢ history ╟' --with-nth 3.. \
-        | sed -r 's/^\s*([0-9]+).+$/\1/'
-    )"
-  elif (( $+commands[batcat] )); then
-    _history_num="$(
-      export FZF_DEFAULT_OPTS; LANG=C
-      fc -lr 1 | batcat --language=sh --color=always --plain \
-        | fzf --ansi --border-label '╢ history ╟' --with-nth 3.. \
-        | sed -r 's/^\s*([0-9]+).+$/\1/'
-    )"
-  else
-    _history_num="$(
-      export FZF_DEFAULT_OPTS; LANG=C
-      fc -lr 1 | fzf --border-label '╢ history ╟' --with-nth 2.. \
-        | sed -r 's/^\s*([0-9]+).+$/\1/'
-    )"
-  fi
+  _history_num="$(
+    export FZF_DEFAULT_OPTS; LANG=C
+    fc -lr 1 \
+      | awk '{ k=$0; sub(/^[ \t]*[0-9]+[ \t]+/, "", k); if (!seen[k]++) print }' \
+      | highlight --syntax shellscript --out-format ansi \
+      | fzf --ansi --border-label '╢ history ╟' --with-nth 3.. \
+      | sed -r 's/^\s*([0-9]+).+$/\1/'
+  )"
   if [[ -n "$_history_num" ]]; then
     BUFFER="$(echo -nE "${history[$_history_num]}")"
     CURSOR="${#BUFFER}"
@@ -99,12 +102,15 @@ function fzf_cdr_selection {
   zle reset-prompt
 }
 
+# ================================
+#  Keybinds
+# ================================
+
 # Register widgets and bind keys only when fzf is available.
 if (( $+commands[fzf] )); then
   zle -N fzf_history_selection
-  bindkey '^R' fzf_history_selection   # C-r: replaces history-incremental-search-backward
+  bindkey '^R' fzf_history_selection
 
   zle -N fzf_cdr_selection
-  bindkey '^S' fzf_cdr_selection       # C-s: replaces history-incremental-search-forward
-                                        # (stty -ixon is set in 20-zsh-options.zsh)
+  bindkey '^S' fzf_cdr_selection
 fi

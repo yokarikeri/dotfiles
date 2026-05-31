@@ -2,8 +2,9 @@
 #  WSL
 # ================================
 
-# Skip if wslpath is not available.
+# Skip if no commands are not available.
 (( $+commands[wslpath] )) || return
+(( $+commands[wslvar] )) || return
 
 # Skip if WSL/Windows interoperability is disabled.
 grep -qx enabled /proc/sys/fs/binfmt_misc/WSLInterop 2>/dev/null || return
@@ -12,24 +13,13 @@ grep -qx enabled /proc/sys/fs/binfmt_misc/WSLInterop 2>/dev/null || return
 #  Export major Windows environment variables
 # ================================
 
-# Convert a Windows environment variable to its Linux path equivalent.
-function get_win_env_path {
-  local -r _win_env_var="$1"
-  test -z "$_win_env_var" && return 1
-
-  local -r _win_path="$(wslvar "$_win_env_var")"
-  test -z "$_win_path" && return 1
-
-  wslpath "$_win_path"
-}
-
-export USERPROFILE="$(get_win_env_path USERPROFILE)"         # C:\Users\<username>
-export APPDATA="$(get_win_env_path APPDATA)"                 # C:\Users\<username>\AppData\Roaming
-export ProgramData="$(get_win_env_path ProgramData)"         # C:\ProgramData
-export ProgramFiles="$(get_win_env_path ProgramFiles)"       # C:\Program Files
+export USERPROFILE="$(get_win_env_path USERPROFILE)"             # C:\Users\<username>
+export APPDATA="$(get_win_env_path APPDATA)"                     # C:\Users\<username>\AppData\Roaming
+export ProgramData="$(get_win_env_path ProgramData)"             # C:\ProgramData
+export ProgramFiles="$(get_win_env_path ProgramFiles)"           # C:\Program Files
 export ProgramFilesX86="$(get_win_env_path 'ProgramFiles(x86)')" # C:\Program Files (x86)
-export systemroot="$(get_win_env_path SystemRoot)"           # C:\WINDOWS
-export LOCALAPPDATA="$(get_win_env_path LOCALAPPDATA)"       # C:\Users\<username>\AppData\Local
+export systemroot="$(get_win_env_path SystemRoot)"               # C:\WINDOWS
+export LOCALAPPDATA="$(get_win_env_path LOCALAPPDATA)"           # C:\Users\<username>\AppData\Local
 
 # ================================
 #  Windows executable wrappers
