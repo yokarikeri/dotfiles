@@ -2,16 +2,21 @@
 # install.sh — Symlink dotfiles into $HOME.
 #
 # Creates symlinks:
-#   ~/.zshenv                   -> <repo>/.zshenv
-#   ~/.config/zsh               -> <repo>/.config/zsh
-#   ~/.config/git/config        -> <repo>/.config/git/config
-#   ~/.config/starship.toml     -> <repo>/.config/starship.toml
-#   ~/.config/mise/config.toml  -> <repo>/.config/mise/config.toml
-#   ~/.config/tmux              -> <repo>/.config/tmux
-#   ~/.config/vim               -> <repo>/.config/vim
-#   ~/.claude                   -> <repo>/.claude
-#   ~/.local/bin/<file>         -> <repo>/.local/bin/<file>  (one per file)
-#   ~/.local/bin/tmux-popup.sh  -> <repo>/.config/tmux/tmux-popup.sh
+#   ~/.zshenv                      -> <repo>/.zshenv
+#   ~/.config/zsh/<entry>          -> <repo>/.config/zsh/<entry>  (one per entry)
+#   ~/.config/git/config           -> <repo>/.config/git/config
+#   ~/.config/starship.toml        -> <repo>/.config/starship.toml
+#   ~/.config/mise/config.toml     -> <repo>/.config/mise/config.toml
+#   ~/.config/tmux/<entry>         -> <repo>/.config/tmux/<entry> (one per entry)
+#   ~/.config/vim/<entry>          -> <repo>/.config/vim/<entry>  (one per entry)
+#   ~/.claude/<entry>              -> <repo>/.claude/<entry>      (one per entry)
+#   ~/.local/bin/<file>            -> <repo>/.local/bin/<file>    (one per file)
+#   ~/.local/bin/tmux-popup.sh     -> <repo>/.config/tmux/tmux-popup.sh
+#
+# Directories that applications use as writable homes (zsh, tmux, vim, claude)
+# are created as real directories; only their tracked contents are symlinked.
+# Runtime-generated files (e.g. .zcompdump, .credentials.json) therefore stay
+# in ~ and never appear inside the repo.
 #
 # Any existing non-symlink targets are backed up to <target>.bak before
 # being replaced. Re-running this script is safe (idempotent).
@@ -61,6 +66,22 @@ make_link() {
   ok "$link -> $target"
 }
 
+# Make $1 a real directory and symlink each top-level entry of repo dir $2 into it.
+# Used for application "home" directories that receive runtime-generated files,
+# so those files land in the real directory and never inside the repo.
+link_dir_contents() {
+  local dest="$1"
+  local src="$2"
+  # Migration: if a previous run left $dest as a whole-directory symlink, drop it
+  # first so we don't create child links *through* the link into the repo itself.
+  [ -L "$dest" ] && rm -f "$dest"
+  mkdir -p "$dest"
+  for entry in "$src"/* "$src"/.[!.]*; do
+    [ -e "$entry" ] || continue   # skip when a glob expands to nothing
+    make_link "$dest/$(basename "$entry")" "$entry"
+  done
+}
+
 # ---------------------------------------------------------------------------
 
 printf '\nInstalling dotfiles from %s\n\n' "$REPO_DIR"
@@ -71,8 +92,8 @@ mkdir -p "$HOME/.config"
 # ~/.zshenv -> <repo>/.zshenv
 make_link "$HOME/.zshenv" "$REPO_DIR/.zshenv"
 
-# ~/.config/zsh -> <repo>/.config/zsh
-make_link "$HOME/.config/zsh" "$REPO_DIR/.config/zsh"
+# ~/.config/zsh/<entry> -> <repo>/.config/zsh/<entry>
+link_dir_contents "$HOME/.config/zsh" "$REPO_DIR/.config/zsh"
 
 # ~/.config/git/config -> <repo>/.config/git/config
 mkdir -p "$HOME/.config/git"
@@ -104,14 +125,14 @@ fi
 mkdir -p "$HOME/.config/mise"
 make_link "$HOME/.config/mise/config.toml" "$REPO_DIR/.config/mise/config.toml"
 
-# ~/.config/tmux -> <repo>/.config/tmux
-make_link "$HOME/.config/tmux" "$REPO_DIR/.config/tmux"
+# ~/.config/tmux/<entry> -> <repo>/.config/tmux/<entry>
+link_dir_contents "$HOME/.config/tmux" "$REPO_DIR/.config/tmux"
 
-# ~/.config/vim -> <repo>/.config/vim
-make_link "$HOME/.config/vim" "$REPO_DIR/.config/vim"
+# ~/.config/vim/<entry> -> <repo>/.config/vim/<entry>
+link_dir_contents "$HOME/.config/vim" "$REPO_DIR/.config/vim"
 
-# ~/.claude -> <repo>/.claude
-make_link "$HOME/.claude" "$REPO_DIR/.claude"
+# ~/.claude/<entry> -> <repo>/.claude/<entry>
+link_dir_contents "$HOME/.claude" "$REPO_DIR/.claude"
 
 # ~/.local/bin/<script> -> <repo>/.local/bin/<script>  (one symlink per file)
 mkdir -p "$HOME/.local/bin"

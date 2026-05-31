@@ -83,8 +83,13 @@ during install are restored. Symlinks you created yourself are left untouched.
 
 ### Editing config
 
-All `~/.config/*` entries are symlinks into the repo, so edits go directly to
-the repo. Changes take effect on the next shell (or `exec zsh` for zsh config).
+Tracked config files are symlinks into the repo, so edits go directly to the
+repo. Changes take effect on the next shell (or `exec zsh` for zsh config).
+
+`~/.config/zsh`, `~/.config/tmux`, `~/.config/vim`, and `~/.claude` are real
+directories (not directory symlinks) — only their tracked contents are linked.
+This keeps runtime-generated files (e.g. `.zcompdump`, `.credentials.json`)
+out of the repo.
 
 To add a zsh config fragment, create `.config/zsh/conf.d/NN-name.zsh`. The
 numeric prefix controls load order (e.g. `30-` for completion-related setup).
@@ -94,6 +99,10 @@ numeric prefix controls load order (e.g. `30-` for completion-related setup).
 1. Add the file to the repo under the appropriate path.
 2. Wire the symlink in `install.sh` (follow the existing pattern).
 3. Re-run `sh install.sh`.
+
+Files added directly under `~/.config/zsh/`, `~/.config/tmux/`, `~/.config/vim/`,
+or `.claude/` are not automatically linked — re-running `install.sh` is required
+to create the new symlink.
 
 ### Managing tools with mise
 

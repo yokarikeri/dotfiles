@@ -48,3 +48,16 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,visualstudiocode
 
+# Runtime-generated files that must never be tracked.
+# Normally these land in real ~ directories rather than inside the repo, but
+# these patterns provide a safety net if the directories are ever symlinked again.
+/.config/zsh/.zcompdump*
+/.config/zsh/.zsh_sessions/
+/.claude/.credentials.json
+/.claude/projects/
+/.claude/todos/
+/.claude/history.jsonl
+/.claude/shell-snapshots/
+/.claude/statsig/
+/.claude/.claude.json*
+/.claude/settings.local.json

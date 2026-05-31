@@ -59,6 +59,20 @@ remove_link() {
   fi
 }
 
+# Remove repo-pointing child symlinks from real directory $1, then rmdir if empty.
+remove_dir_contents() {
+  local dest="$1"
+  if [ ! -d "$dest" ] || [ -L "$dest" ]; then
+    info "Skipping $dest (not found)"
+    return
+  fi
+  for link in "$dest"/* "$dest"/.[!.]*; do
+    [ -L "$link" ] || continue
+    remove_link "$link"
+  done
+  rmdir "$dest" 2>/dev/null && ok "Removed empty $dest" || true
+}
+
 # ---------------------------------------------------------------------------
 
 printf '\nUninstalling dotfiles (repo: %s)\n\n' "$REPO_DIR"
@@ -67,7 +81,7 @@ printf '\nUninstalling dotfiles (repo: %s)\n\n' "$REPO_DIR"
 remove_link "$HOME/.zshenv"
 
 # ~/.config/zsh
-remove_link "$HOME/.config/zsh"
+remove_dir_contents "$HOME/.config/zsh"
 
 # ~/.config/git/config
 remove_link "$HOME/.config/git/config"
@@ -79,13 +93,13 @@ remove_link "$HOME/.config/starship.toml"
 remove_link "$HOME/.config/mise/config.toml"
 
 # ~/.config/tmux
-remove_link "$HOME/.config/tmux"
+remove_dir_contents "$HOME/.config/tmux"
 
 # ~/.config/vim
-remove_link "$HOME/.config/vim"
+remove_dir_contents "$HOME/.config/vim"
 
 # ~/.claude
-remove_link "$HOME/.claude"
+remove_dir_contents "$HOME/.claude"
 
 # ~/.local/bin/<script> — one link per file in .local/bin
 for src in "$REPO_DIR/.local/bin/"*; do
