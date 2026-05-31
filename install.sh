@@ -9,6 +9,7 @@
 #   ~/.config/mise/config.toml  -> <repo>/.config/mise/config.toml
 #   ~/.config/tmux              -> <repo>/.config/tmux
 #   ~/.config/vim               -> <repo>/.config/vim
+#   ~/.claude                   -> <repo>/.claude
 #   ~/.local/bin/<file>         -> <repo>/.local/bin/<file>  (one per file)
 #   ~/.local/bin/tmux-popup.sh  -> <repo>/.config/tmux/tmux-popup.sh
 #
@@ -31,12 +32,18 @@ info() { printf '  %s\n' "$*"; }
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$*"; }
 warn() { printf '  \033[33m!\033[0m %s\n' "$*"; }
 
-# Back up $1 to $1.bak if it exists and is not already a symlink.
+# Remove $1 if identical to $2, or back it up to $1.bak, if it exists and is not a symlink.
 backup_if_needed() {
-  local target="$1"
-  if [ -e "$target" ] && [ ! -L "$target" ]; then
-    warn "Backing up existing $target to ${target}.bak"
-    mv "$target" "${target}.bak"
+  local link="$1"
+  local source="$2"
+  if [ -e "$link" ] && [ ! -L "$link" ]; then
+    if diff -rq "$link" "$source" > /dev/null 2>&1; then
+      info "Removing identical $link"
+      rm -rf "$link"
+    else
+      warn "Backing up existing $link to ${link}.bak"
+      mv "$link" "${link}.bak"
+    fi
   fi
 }
 
@@ -44,7 +51,7 @@ backup_if_needed() {
 make_link() {
   local link="$1"
   local target="$2"
-  backup_if_needed "$link"
+  backup_if_needed "$link" "$target"
   ln -sfn "$target" "$link"
   ok "$link -> $target"
 }
@@ -78,6 +85,9 @@ make_link "$HOME/.config/tmux" "$REPO_DIR/.config/tmux"
 
 # ~/.config/vim -> <repo>/.config/vim
 make_link "$HOME/.config/vim" "$REPO_DIR/.config/vim"
+
+# ~/.claude -> <repo>/.claude
+make_link "$HOME/.claude" "$REPO_DIR/.claude"
 
 # ~/.local/bin/<script> -> <repo>/.local/bin/<script>  (one symlink per file)
 mkdir -p "$HOME/.local/bin"
