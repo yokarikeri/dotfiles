@@ -1,9 +1,16 @@
 #!/bin/sh
 # install.sh — Symlink dotfiles into $HOME.
 #
-# Creates two symlinks:
-#   ~/.zshenv      -> <repo>/.zshenv
-#   ~/.config/zsh  -> <repo>/.config/zsh
+# Creates symlinks:
+#   ~/.zshenv                   -> <repo>/.zshenv
+#   ~/.config/zsh               -> <repo>/.config/zsh
+#   ~/.config/git/config        -> <repo>/.config/git/config
+#   ~/.config/starship.toml     -> <repo>/.config/starship.toml
+#   ~/.config/mise/config.toml  -> <repo>/.config/mise/config.toml
+#   ~/.config/tmux              -> <repo>/.config/tmux
+#   ~/.config/vim               -> <repo>/.config/vim
+#   ~/.local/bin/<file>         -> <repo>/.local/bin/<file>  (one per file)
+#   ~/.local/bin/tmux-popup.sh  -> <repo>/.config/tmux/tmux-popup.sh
 #
 # Any existing non-symlink targets are backed up to <target>.bak before
 # being replaced. Re-running this script is safe (idempotent).
@@ -55,11 +62,34 @@ make_link "$HOME/.zshenv" "$REPO_DIR/.zshenv"
 # ~/.config/zsh -> <repo>/.config/zsh
 make_link "$HOME/.config/zsh" "$REPO_DIR/.config/zsh"
 
+# ~/.config/git/config -> <repo>/.config/git/config
+mkdir -p "$HOME/.config/git"
+make_link "$HOME/.config/git/config" "$REPO_DIR/.config/git/config"
+
+# ~/.config/starship.toml -> <repo>/.config/starship.toml
+make_link "$HOME/.config/starship.toml" "$REPO_DIR/.config/starship.toml"
+
+# ~/.config/mise/config.toml -> <repo>/.config/mise/config.toml
+mkdir -p "$HOME/.config/mise"
+make_link "$HOME/.config/mise/config.toml" "$REPO_DIR/.config/mise/config.toml"
+
+# ~/.config/tmux -> <repo>/.config/tmux
+make_link "$HOME/.config/tmux" "$REPO_DIR/.config/tmux"
+
+# ~/.config/vim -> <repo>/.config/vim
+make_link "$HOME/.config/vim" "$REPO_DIR/.config/vim"
+
 # ~/.local/bin/<script> -> <repo>/.local/bin/<script>  (one symlink per file)
 mkdir -p "$HOME/.local/bin"
 for src in "$REPO_DIR/.local/bin/"*; do
+  chmod +x "$src"
   make_link "$HOME/.local/bin/$(basename "$src")" "$src"
 done
+
+# tmux-popup.sh lives under .config/tmux but is invoked from ~/.local/bin
+# (referenced by tmux.conf as $HOME/.local/bin/tmux-popup.sh)
+chmod +x "$REPO_DIR/.config/tmux/tmux-popup.sh"
+make_link "$HOME/.local/bin/tmux-popup.sh" "$REPO_DIR/.config/tmux/tmux-popup.sh"
 
 printf '\nDone. Open a new shell to apply the configuration.\n'
 printf 'On the first start, zsh-users plugins will be cloned automatically.\n\n'

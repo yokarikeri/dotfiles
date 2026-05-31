@@ -1,0 +1,62 @@
+" =========================================================================
+" Vim Configuration
+" =========================================================================
+
+" -------------------------------------------------------------------------
+" Basic Settings
+" -------------------------------------------------------------------------
+set nocompatible                           " Use Vim defaults instead of vi compatibility
+set encoding=utf-8                         " Internal encoding
+set fileencodings=utf-8,sjis,euc-jp,latin1 " Encoding detection order
+set backspace=indent,eol,start             " Allow backspacing over everything
+set hidden                                 " Allow background buffers
+set history=10000                          " Command and search history
+
+" -------------------------------------------------------------------------
+" Appearance & UI
+" -------------------------------------------------------------------------
+syntax on             " Enable syntax highlighting
+set number            " Show line numbers
+set cursorline        " Highlight current line
+set showmatch         " Highlight matching brackets
+set matchtime=1       " Match highlight duration (0.1s)
+set wildmenu          " Visual menu for command completion
+set ruler             " Show cursor position in status bar
+
+" Visible characters for tabs and trailing spaces
+set list
+set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«
+
+" -------------------------------------------------------------------------
+" Search Settings
+" -------------------------------------------------------------------------
+set incsearch         " Incremental search
+set hlsearch          " Highlight search matches
+set ignorecase        " Ignore case in search
+set smartcase         " Case-sensitive if search contains uppercase
+set wrapscan          " Wrap search around end of file
+
+" Press ESC twice to clear search highlighting
+nnoremap <Esc><Esc> :nohlsearch<CR><Esc>
+
+" -------------------------------------------------------------------------
+" Indentation & Tabs
+" -------------------------------------------------------------------------
+set autoindent        " Copy indent from current line
+set smartindent       " Smart auto-indentation
+set tabstop=2         " Number of visual spaces per tab
+set shiftwidth=2      " Number of spaces for auto-indent
+set expandtab         " Use spaces instead of tabs
+
+" -------------------------------------------------------------------------
+" Behavior & Automation
+" -------------------------------------------------------------------------
+" Restore cursor position
+autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
+
+" -------------------------------------------------------------------------
+" Backup & Swap files
+" -------------------------------------------------------------------------
+set noswapfile        " Disable swap files
+set nobackup          " Disable backup files
+set noundofile        " Disable undo files

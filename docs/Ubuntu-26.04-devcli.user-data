@@ -1,0 +1,184 @@
+#cloud-config
+# Ubuntu-26.04-devcli.userdata: A daily-use environment with Systemd disabled.
+# ref. https://documentation.ubuntu.com/wsl/latest/
+# ref. https://docs.cloud-init.io/en/latest/reference/datasources/wsl.html
+
+# Ubuntu-26.04
+# wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
+# wsl --unregister Ubuntu-26.04-devcli
+
+timezone: Asia/Tokyo
+locale: en_US.UTF-8
+
+users:
+  - name: wsl-user
+    gecos: WSL User
+    # System Groups: https://wiki.debian.org/SystemGroups
+    groups: [users, sudo, adm] # netdev, audio, plugdev
+    shell: /usr/bin/zsh
+    lock_passwd: true
+    # sudo: "ALL=(ALL) NOPASSWD:ALL"
+
+apt:
+  sources:
+    git-core-ppa:
+      source: "ppa:git-core/ppa"
+    mise-ppa:
+      source: "ppa:jdxcode/mise"
+
+package_update: true
+package_upgrade: true
+
+# Default packages: https://releases.ubuntu.com/resolute/ubuntu-26.04-wsl-amd64.manifest
+packages:
+  # === WSL & Localization ===
+  - language-pack-ja # Japanese language support
+  - manpages-ja # Japanese man pages
+  - manpages-ja-dev # Japanese man pages for developers
+
+  # === System & Shell ===
+  - btop # replaces top / htop
+  - bubblewrap # Unprivileged sandboxing tool
+  - cloud-image-utils # Cloud image management utilities
+  - ncdu # replaces du
+  - pydf # replaces df
+  - starship # Cross-shell prompt
+  - tmux # Terminal multiplexer
+  - zsh # Z shell
+  - mise # dev tools, env vars, task runner
+
+  # === Editors & Pagers ===
+  - bat # replaces cat
+  - hexyl # replaces hexdump
+  - pspg # Postgres Pager
+  - vim # replaces vi
+
+  # === Search & File Utilities ===
+  - eza # replaces ls
+  - fd-find # replaces find
+  - fzf # fuzzy finder
+  - ripgrep # replaces grep
+  - tree # Directory listing program
+  - ugrep # replaces grep
+
+  # === Text & Data Processing ===
+  - colordiff # replaces diff
+  - crudini # INI file utility
+  - csvkit # CSV file utility
+  - dasel # Data-Selector for JSON/YAML/TOML/XML/CSV/etc
+  - gron # Make JSON greppable
+  - highlight # Source code to formatted text converter
+  - jc # JSON Convert
+  - jq # JSON Query
+  - miller # Data processing tool for CSV/JSON/etc
+  - visidata # Terminal spreadsheet multitasker
+  - xmlstarlet # XML toolkit
+  - xq # XML and HTML processor
+  - yamllint # YAML linter
+  - yq # YAML processor
+
+  # === Encoding & Line Endings ===
+  - dos2unix # DOS/Mac to UNIX format converter
+  - nkf # Network Kanji Filter
+  - uchardet # Encoding detector
+
+  # === Archiving & Compression ===
+  - 7zip # File archiver
+  - libarchive-tools # bsdtar, bsdcpio and bsdcat
+  - tar # GNU tar archiving utility
+  - unzip # De-archiver for .zip files
+  - zip # Archiver for .zip files
+
+  # === Network & Download ===
+  - bind9-dnsutils # DNS utilities
+  - bind9-host # DNS lookup utility
+  - curl # Client URL
+  - netcat-openbsd # TCP/IP swiss army knife
+  - openssh-client # Secure shell client
+  - socat # SOcket CAT
+  - wget # retrieves files from the web
+
+  # === Version Control & Diff ===
+  - git # Distributed version control system
+  - git-delta # Syntax-highlighting pager for git
+  - git-flow # Git extensions for repo operations
+
+  # === Document & Clipboard ===
+  - glow # Render markdown on the CLI
+  - pandoc # General markup converter
+  - xclip # CLI interface to X selections
+  - xsel # CLI program for accessing X clipboard
+
+write_files:
+  - path: /etc/wsl.conf
+    permissions: "0644"
+    content: |
+      # ref. https://learn.microsoft.com/en-us/windows/wsl/wsl-config
+      # ref. https://documentation.ubuntu.com/wsl/stable/reference/instance_configuration/
+
+      [boot]
+      # For fast startup
+      systemd = false
+
+      [interop]
+      # For fast startup
+      appendWindowsPath = false
+      #enabled = true
+
+      [user]
+      default = wsl-user
+
+      [network]
+      hostname = u26w-cli
+      #generateHosts = true
+      #generateResolvConf = true
+
+  # Alternative to clip.exe
+  - path: /usr/local/bin/clip.exe
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+
+      # @(#) clip.exe wrapper for WSL
+
+      # Reasons to use xsel:
+      # - Uses LF line endings.
+      # - Can be used even when WSL interoperability is disabled.
+      if [ -n "$DISPLAY" ] && which xsel >/dev/null 2>&1; then
+        xsel --clipboard --input && exit 0
+      fi
+
+      # Windows clip.exe — search all mounted Windows drives
+      # iconv -t utf16 produces UTF-16 with BOM; tail -c +3 strips it,
+      # leaving raw UTF-16LE that clip.exe interprets correctly
+      for _mnt_point in $(LANG=C df -T | awk '$2 == "9p" && $1 ~ /^[A-Z]:\\$/ {print $NF}'); do
+        _clip_path="$_mnt_point/Windows/System32/clip.exe"
+        if [ -x "$_clip_path" ]; then
+          iconv -t utf16 | tail -c +3 | "$_clip_path" && exit 0
+        fi
+      done
+
+      exit 1
+
+runcmd:
+  # Disable root login
+  # https://documentation.ubuntu.com/wsl/stable/explanation/security-overview/#disable-root-login
+  - sed -i 's/^root.*$/root:x:0:0:root:\/root:\/usr\/sbin\/nologin/' /etc/passwd
+
+  # Requires a password change upon initial login
+  - passwd -d wsl-user
+  - chage -d 0 wsl-user
+
+  # dotfiles
+  - sudo -u wsl-user git clone --recursive https://github.com/yokarikeri/dotfiles.git "$HOME/.dotfiles"
+  - sudo -u wsl-user sh "$HOME/.dotfiles/install.sh"
+
+  # editor: Nano -> Vim
+  - update-alternatives --set editor /usr/bin/vim.basic
+
+  # Claude Code
+  # https://code.claude.com/docs/en/quickstart
+  - sudo -u wsl-user bash -c "curl -fsSL https://claude.ai/install.sh | bash"
+
+package_reboot_if_required: true

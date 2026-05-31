@@ -1,0 +1,205 @@
+# ================================
+#  Mise global config
+#  ~/.config/mise/config.toml
+# ================================
+
+# --------------------------------
+#  Mise Cheatsheet
+#  https://mise.jdx.dev/cli/
+# --------------------------------
+#
+# --- 1. Info ---
+# mise ls|list                     List installed and active tool versions
+# mise ls-remote <tool>            List runtime versions available for install
+# mise registry                    List available tools to install
+#
+# --- 2. Tool Management ---
+# mise u|use <tool>[@<version>]    Install and add to local config (./.mise.toml)
+# mise u|use -g <tool>[@<version>] Install and add to global config (~/.config/mise/config.toml)
+# mise x|exec <tool> -- <cmd>      Execute a command with tool(s) set without modifying current env
+#
+# mise i|install                   Install all missing tools defined in mise.toml (Run after "git clone")
+# mise up|upgrade                  Upgrades outdated tools to their latest versions
+# mise dr|doctor                   Check mise installation for possible problems
+#
+# mise rm|remove <tool>            Remove from local config (./.mise.toml). Uninstall if not in use.
+# mise rm|remove -g <tool>         Remove from global config (~/.config/mise/config.toml). Uninstall if not in use.
+# mise uninstall <tool>@<version>  Removes installed tool versions (does not modify mise.toml)
+#
+# --- 3. Task Management ---
+# mise t|tasks                     List available tasks in the project
+# mise r|run <task>                Run task(s)
+# mise w|watch <task>              Run task(s) and watch for file changes to rerun it
+#
+# --- IDE Community Plugins ---
+# ref. https://mise.jdx.dev/ide-integration.html#ide-plugins
+
+# --------------------------------
+#  Mise Configuration
+#  https://mise.jdx.dev/configuration.html
+# --------------------------------
+#
+# ref. https://mise-versions.jdx.dev/
+# ref. https://aqua-picker.deno.dev/ (https://github.com/aquaproj/aqua-registry/blob/main/registry.yaml)
+#
+# Mise Backend Capabilities Comparison
+# ref. https://mise.jdx.dev/dev-tools/backend_architecture.html#backend-capabilities-comparison
+#
+# | Feature               | Core | npm/pipx/cargo | aqua | ubi | Backend Plugins | Tool Plugins (vfox) | asdf Plugins (legacy) |
+# | --------------------- | ---- | -------------- | ---- | --- | --------------- | ------------------- | --------------------- |
+# | Security              | Yes  | (!)            | Yes  | (!) | (!)             | (!)                 | (!)                   |
+# | Speed                 | Yes  | (!)            | Yes  | Yes | (!)             | (!)                 | (!)                   |
+# | Env Var Support       | Yes  | No             | No   | No  | Yes             | Yes                 | Yes                   |
+# | Custom Scripts        | Yes  | No             | No   | No  | Yes             | Yes                 | Yes                   |
+# | Built-in Modules      | Yes  | No             | No   | No  | Yes             | Yes                 | No                    |
+# | Security Attestations | No   | No             | Yes  | No  | Yes             | Yes                 | No                    |
+# | Multi-tool Plugins    | No   | No             | No   | No  | Yes             | No                  | No                    |
+# | Progress/Logging      | Yes  | Yes            | Yes  | Yes | Yes             | Yes                 | No                    |
+# | Windows Support       | Yes  | Yes            | Yes  | Yes | Yes             | Yes                 | No                    |
+
+# --------------------------------
+[settings]
+#  https://mise.jdx.dev/configuration/settings.html
+# --------------------------------
+
+# Limiting supply chain risks: only install versions released more than 7 days ago
+# ref. https://mise.jdx.dev/tips-and-tricks.html#minimum-release-age
+install_before = "7d"
+
+# (Example) Disable backends
+# ref. https://mise.jdx.dev/dev-tools/backend_architecture.html#disable-backends
+# ref. https://mise.jdx.dev/dev-tools/backend_architecture.html#backend-capabilities-comparison
+# disable_backends = ["asdf", "vfox"]
+
+# https://mise.jdx.dev/dev-tools/
+
+# --------------------------------
+[tools]
+#  https://mise.jdx.dev/dev-tools/
+# --------------------------------
+
+"aqua:jdx/usage" = "latest" # Used for Mise Completion
+
+## Runtime
+# "core:node" = "lts"            # cf. mise ls-remote core:node | grep -oP '^\d+' | uniq | awk -F. '$1 % 2 == 0' | tail -n 10
+# "npm:pnpm" = "latest"          # cf. mise ls-remote npm:pnpm | grep -xP '[\d.]+' | grep -oP '^\d+' | uniq | tail -n 10
+# "core:bun" = "latest"
+# "core:python" = "latest"       # cf. mise ls-remote core:python | grep -xP '[\d.]+' | grep -oP '^\d+\.\d+' | uniq | tail -n 10
+# "aqua:astral-sh/uv" = "latest"
+
+## Shell
+# "aqua:junegunn/fzf" = "latest"             # Fuzzy finder
+# "aqua:charmbracelet/gum" = "latest"        # TUI components
+# "aqua:starship/starship" = "latest"        # Customizable prompt
+# "aqua:carapace-sh/carapace-bin" = "latest" # Shell completion library
+# "github:tmux/tmux-builds" = "latest"       # Terminal multiplexer
+
+## Git
+# "aqua:cli/cli" = "latest"                      # GitHub’s official command line tool (gh)
+# "aqua:aquasecurity/trivy" = "latest"           # Security scanner
+# "aqua:gitleaks/gitleaks" = "latest"            # Simple secret scanner
+# "aqua:jesseduffield/lazygit" = "latest"        # Git client
+# "aqua:dandavison/delta" = "latest"             # Pager for git
+# "aqua:Wilfred/difftastic" = "latest"           # Structural diffs
+# "github:github/codeql-cli-binaries" = "latest" # SAST tool for GitHub
+# "aqua:j178/prek" = "latest"                    # git hooks manager
+# "aqua:evilmartians/lefthook" = "latest"        # git hooks manager
+# "aqua:jdx/hk" = "latest"                       # git hooks manager
+# "aqua:aqua:anchore/grype" = "latest"           # Vulnerability scanner
+# "aqua:anchore/syft" = "latest"                 # SBOM tool
+
+## GitHub Actions
+# "aqua:rhysd/actionlint" = "latest"        # GitHub Actions linter (Syntax check)
+# "aqua:suzuki-shunsuke/ghalint" = "latest" # GitHub Actions linter (Security check)
+# "aqua:zizmorcore/zizmor" = "latest"       # Security scanner
+# "aqua:suzuki-shunsuke/pinact" = "latest"  # Version pinner
+
+## Seacret manager
+# "aqua:hashicorp/vault" = "latest" # Secret manager
+# "aqua:getsops/sops" = "latest"    # Secret encryption
+# "aqua:1password/cli" = "latest"   # Password manager (paid service)
+# "github:jdx/fnox" = "latest"      # Secret manager
+
+## Linter/Formatter
+# "aqua:koalaman/shellcheck" = "latest"  # SAST tool for shell scripts
+# "aqua:mvdan/sh" = "latest"             # Shell scripts parser (shfmt)
+# "aqua:crate-ci/typos" = "latest"       # Spell checker (Blacklist)
+# "aqua:editorconfig-checker" = "latest" # EditorConfig checker
+
+## Common CLI tools
+# "aqua:mikefarah/yq" = "latest"            # YAML processor
+# "aqua:jqlang/jq" = "latest"               # JSON processor
+# "aqua:BurntSushi/ripgrep" = "latest"      # Alternatives for grep
+# "aqua:sharkdp/fd" = "latest"              # Alternatives for find
+# "aqua:neovim/neovim" = "latest"           # Alternatives for vim
+# "aqua:tamasfe/taplo" = "latest"           # TOML toolkit
+# "aqua:sharkdp/bat" = "latest"             # Alternatives for cat
+# "aqua:lycheeverse/lychee" = "latest"      # Link checker
+# "aqua:eza-community/eza" = "latest"       # Alternatives for ls
+# "aqua:ast-grep/ast-grep" = "latest"       # Code structural search, lint and rewriting
+# "aqua:sxyazi/yazi" = "latest"             # Terminal file manager
+# "aqua:tree-sitter/tree-sitter" = "latest" # Parser generator
+# "aqua:aristocratos/btop" = "latest"       # Alternatives for top
+# "aqua:sharkdp/hyperfine" = "latest"       # Alternatives for time
+# "aqua:homeport/dyff" = "latest"           # YAML and JSON diff
+# "aqua:ClementTsang/bottom" = "latest"     # Alternatives for top
+# "aqua:bootandy/dust" = "latest"           # Alternatives for du
+# "aqua:Byron/dua-cli" = "latest"           # Disk Usage Analyzer
+# "aqua:antonmedv/fx" = "latest"            # Interactive JSON viewer
+# "aqua:tldr-pages/tlrc" = "latest"         # Alternatives for tldr
+# "aqua:tomnomnom/gron" = "latest"          # Make JSON greppable
+# "aqua:sachaos/viddy" = "latest"           # Alternatives for watch
+# "aqua:sharkdp/hexyl" = "latest"           # Alternatives for xxd/hexdump
+# "aqua:phiresky/ripgrep-all" = "latest"    # Search in PDFs, E-Books, Office documents, zip, tar.gz, etc.
+# "aqua:mgdm/htmlq" = "latest"              # Uses CSS selectors to extract bits of content from HTML files
+# "aqua:TomWright/dasel" = "latest"         # JSON/TOML/YAML/XML/CSV processor
+# "pipx:yamllint" = "latest"                # YAML linter
+# "github:sheeki03/tirith" = "latest"       # Terminal security tool
+
+## Docker
+# "aqua:hadolint/hadolint" = "latest"
+# "aqua:GoogleContainerTools/container-structure-test" = "latest"
+# "aqua:docker/cli" = "latest"
+# "aqua:docker/compose" = "latest"
+# "aqua:jesseduffield/lazydocker" = "latest"
+# "aqua:wagoodman/dive" = "latest"
+# "aqua:bcicen/ctop" = "latest"
+
+## LLM
+# Claude Code Official (automatic update): https://code.claude.com/docs/en/setup#install-claude-code
+# "npm:@anthropic-ai/claude-code" = "latest" # Claude Code (npm)
+# "npm:@openai/codex" = "latest"             # Codex CLI
+# "npm:@google/gemini-cli" = "latest"        # Gemini CLI
+
+## Cloud
+# "aqua:aws/aws-cli" = "latest"              # AWS CLI v2 (aws)
+# "vfox:mise-plugins/vfox-gcloud" = "latest" # Google Cloud CLI (gcloud)
+# "pipx:azure-cli" = "latest"                # Azure CLI (az)
+# "github:GAM-team/GAM" = "latest"           # command line management for Google Workspace (gam)
+
+# --------------------------------
+# [env]
+#  https://mise.jdx.dev/environments/
+# --------------------------------
+
+# e.g.
+# MY_VAR = '123'
+
+# --------------------------------
+# [shell_alias]
+#  https://mise.jdx.dev/shell-aliases.html
+#  https://mise.jdx.dev/templates.html
+# --------------------------------
+
+# e.g.
+# proj = "cd {{config_root}}"
+# node_version = "echo {{exec(command='node --version')}}"
+
+# --------------------------------
+# [hooks]
+#  https://mise.jdx.dev/hooks.html
+# --------------------------------
+
+# e.g.
+# enter = "echo 'Starting local environment...' && docker compose up -d"
+# leave = "echo 'Stopping local environment...' && docker compose stop"
