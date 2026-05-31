@@ -47,6 +47,11 @@ backup_if_needed() {
   fi
 }
 
+# Return true if $1 is a semantic version strictly less than $2.
+version_lt() {
+  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ] && [ "$1" != "$2" ]
+}
+
 # Create or update a symlink: $1 (link path) -> $2 (target in repo).
 make_link() {
   local link="$1"
@@ -74,7 +79,26 @@ mkdir -p "$HOME/.config/git"
 make_link "$HOME/.config/git/config" "$REPO_DIR/.config/git/config"
 
 # ~/.config/starship.toml -> <repo>/.config/starship.toml
-make_link "$HOME/.config/starship.toml" "$REPO_DIR/.config/starship.toml"
+# starship < 1.23.0 (Ubuntu 26.04 ships 1.22.1) doesn't recognise some keys;
+# apply a compat patch to a plain file instead of symlinking.
+_starship_ver=""
+if command -v starship > /dev/null 2>&1; then
+  _starship_ver=$(starship --version 2>/dev/null | awk 'NR==1{print $2}')
+fi
+if [ -n "$_starship_ver" ] && version_lt "$_starship_ver" "1.23.0"; then
+  _link="$HOME/.config/starship.toml"
+  if [ -e "$_link" ] && [ ! -L "$_link" ]; then
+    warn "Backing up existing $_link to ${_link}.bak"
+    mv "$_link" "${_link}.bak"
+  elif [ -L "$_link" ]; then
+    rm -f "$_link"
+  fi
+  cp "$REPO_DIR/.config/starship.toml" "$_link"
+  patch -s "$_link" < "$REPO_DIR/patches/starship-v1.22.1-compat.patch"
+  ok "$_link (patched for starship $_starship_ver)"
+else
+  make_link "$HOME/.config/starship.toml" "$REPO_DIR/.config/starship.toml"
+fi
 
 # ~/.config/mise/config.toml -> <repo>/.config/mise/config.toml
 mkdir -p "$HOME/.config/mise"

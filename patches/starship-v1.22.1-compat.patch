@@ -1,0 +1,141 @@
+--- /home/wsl-user/.config/starship.toml.bak    2026-05-31 19:11:07.210089330 +0900
++++ /home/wsl-user/.config/starship.toml        2026-05-31 19:09:19.177114911 +0900
+@@ -203,12 +203,6 @@
+ # style = "bold blue"
+ disabled = true
+
+-[netns]
+-# format = "[$symbol \\[$name\\]]($style) "
+-# symbol = "🛜"
+-# style = "blue bold dimmed"
+-disabled = true
+-
+ [localip]
+ # ssh_only = true
+ # format = "[$localipv4]($style) "
+@@ -268,7 +262,6 @@
+ symbol = ''
+ always_show_remote = false
+ only_attached = false
+-ignore_bare_repo = false
+ # style = "bold purple"
+ # truncation_length = 9223372036854775807
+ # truncation_symbol = "…"
+@@ -304,7 +297,6 @@
+ diverged = ' [⇕⇡${ahead_count}⇣${behind_count}](bg:p10k_bg fg:p10k_vivid_red)'
+ up_to_date = ' [](bg:p10k_bg fg:p10k_vivid_green)'
+ ignore_submodules = false
+-use_git_executable = false
+ # style = "red bold"
+ disabled = false
+
+@@ -441,18 +433,6 @@
+ # detect_env_vars = ["!PIXI_ENVIRONMENT_NAME"]
+ disabled = true
+
+-[pixi]
+-format = '$symbol($version )(\($environment\))'
+-symbol = ' ' # '🧚 '
+-# pixi_binary = ["pixi"]
+-# show_default_environment = true
+-# version_format = "v${raw}"
+-# style = "yellow bold"
+-# detect_extensions = []
+-# detect_files = ["pixi.toml","pixi.lock"]
+-# detect_folders = []
+-disabled = true
+-
+ [spack]
+ format = '$symbol$environment'
+ symbol = ' ' # '🅢 '
+@@ -468,19 +448,6 @@
+ # truncation_symbol = "…"
+ disabled = true
+
+-[hg_state]
+-format = '\($state\)'
+-# merge = "MERGING"
+-# rebase = "REBASING"
+-# update = "UPDATING"
+-# bisect = "BISECTING"
+-# shelve = "SHELVING"
+-# graft = "GRAFTING"
+-# transplant = "TRANSPLANTING"
+-# histedit = "HISTEDITING"
+-# style = "bold yellow"
+-disabled = true
+-
+ [fossil_branch]
+ format = '$symbol$branch'
+ symbol = ' '
+@@ -510,17 +477,6 @@
+ # style = "bold yellow"
+ disabled = true
+
+-[mise]
+-format = '$symbol$health'
+-symbol = 'mise '
+-# style = "bold purple"
+-# detect_extensions = []
+-# detect_files = ["mise.toml","mise.local.toml",".mise.toml",".mise.local.toml"]
+-# detect_folders = [".mise"]
+-# healthy_symbol = "healthy"
+-# unhealthy_symbol = "unhealthy"
+-disabled = true
+-
+ [direnv]
+ format = '$symbol$loaded/$allowed'
+ symbol = 'direnv '
+@@ -587,17 +543,6 @@
+ # commands = [["cc","--version"],["gcc","--version"],["clang","--version"]]
+ disabled = true
+
+-[cpp]
+-format = '$symbol($version(-$name))'
+-symbol = '󰙲 ' # C++ '
+-# version_format = "v${raw}"
+-# style = "149 bold"
+-# detect_extensions = ["cpp","cc","cxx","c++","hpp","hh","hxx","h++","tcc"]
+-# detect_files = []
+-# detect_folders = []
+-# commands = [["c++","--version"],["g++","--version"],["clang++","--version"]]
+-disabled = true
+-
+ [java]
+ format = '$symbol($version)'
+ symbol = ' ' # '☕ '
+@@ -908,17 +853,6 @@
+ # detect_folders = []
+ disabled = true
+
+-[fortran]
+-format = '$symbol($version(-$name))'
+-symbol = '󱈚 ' # '🅵  '
+-# version_format = "${raw}"
+-# style = "bold purple"
+-# detect_extensions = ["f","F","for","FOR","ftn","FTN","f77","F77","f90","F90","f95","F95","f03","F03","f08","F08","f18","F18"]
+-# detect_files = ["fpm.toml"]
+-# detect_folders = []
+-# commands = [["gfortran","--version"],["flang","--version"],["flang-new","--version"]]
+-disabled = true
+-
+ [perl]
+ format = '$symbol($version)'
+ symbol = ' ' # '🐪 '
+@@ -1030,16 +964,6 @@
+ # style = "blue bold"
+ disabled = true
+
+-[xmake]
+-format = '$symbol($version)'
+-symbol = '△ '
+-# version_format = "v${raw}"
+-# style = "bold green"
+-# detect_extensions = []
+-# detect_files = ["xmake.lua"]
+-# detect_folders = []
+-disabled = true
+-
+ [guix_shell]
+ format = '$symbol'
+ symbol = ' ' # '🐃 '
