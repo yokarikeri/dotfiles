@@ -2,8 +2,8 @@
 
 # @(#) Copy Claude's entire conversation to clipboard
 
-PROJ_DIR="${1:-$HOME/.claude/projects/$(printf '%s' "$PWD" | sed 's|/|-|g')}"
-JSONL="$(ls -t "$PROJ_DIR"/*.jsonl 2>/dev/null | head -1)"
+PROJ_DIR="$HOME/.claude/projects/$(printf '%s' "${1:-$PWD}" | sed 's|[/.]|-|g')"
+JSONL="$(ls -t "$PROJ_DIR"/*.jsonl 2>/dev/null | sed -n ${2:-1}p)"
 [ -z "$JSONL" ] && { echo "No session jsonl found under $PROJ_DIR" >&2; exit 1; }
 
 jq -r '
