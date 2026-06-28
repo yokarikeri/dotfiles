@@ -28,6 +28,10 @@ if (( $+commands[fdfind] )) && ! (( $+commands[fd] )); then
   alias fd='fdfind'
 fi
 
+if (( $+commands[fzf-preview] )) && ! (( $+commands[fp] )); then
+  alias fp='fzf-preview'
+fi
+
 # ================================
 #  Zsh built-in history alias
 # ================================

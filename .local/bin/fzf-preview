@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+# @(#) Browse files with fzf + bat preview; open the selection in $EDITOR.
+#
+# Usage: fzf-preview [options] [KEYWORD]
+#   -d, --dir DIR         directory to search (default: .)
+#   -q, --query QUERY     initial fzf query (both modes)
+#   -g, --grep KEYWORD    full-text search mode (rg); open file at matched line
+#   -e, --exclude GLOB    exclude dir, repeatable (default: .git)
+#   -h, --help            show this help
+#   KEYWORD / -- KEYWORD  shorthand for -g
+
+set -euo pipefail
+
+usage() {
+  sed -n '4,11p' "$0" | sed 's/^# \{0,1\}//'
+  exit "${1:-0}"
+}
+
+# --- arg parsing ---
+
+query=''
+grep_keyword=''
+excludes=()
+dir='.'
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -d|--dir)     [ $# -ge 2 ] || { echo "error: $1 requires an argument" >&2; usage 1; }
+                  dir=$2; shift 2 ;;
+    -q|--query)   [ $# -ge 2 ] || { echo "error: $1 requires an argument" >&2; usage 1; }
+                  query=$2; shift 2 ;;
+    -g|--grep)    [ $# -ge 2 ] || { echo "error: $1 requires an argument" >&2; usage 1; }
+                  grep_keyword=$2; shift 2 ;;
+    -e|--exclude) [ $# -ge 2 ] || { echo "error: $1 requires an argument" >&2; usage 1; }
+                  excludes+=("$2"); shift 2 ;;
+    -h|--help)    usage 0 ;;
+    --)           shift; [ $# -gt 0 ] && { grep_keyword=$1; shift; }; break ;;
+    -*)           echo "error: unknown option: $1" >&2; usage 1 ;;
+    *)            grep_keyword=$1; shift ;;
+  esac
+done
+
+[ ${#excludes[@]} -eq 0 ] && excludes=('.git')
+
+cd "$dir"
+
+editor=${EDITOR:-${VISUAL:-vi}}
+
+# --- shared fzf appearance ---
+
+export FZF_DEFAULT_OPTS="--height 100% --min-height 10 --border --margin 1 --padding 1 \
+  --prompt '❯ ' --pointer '▐' \
+  --color 'hl:underline,hl+:underline:reverse,pointer:76,prompt:76' \
+  --info hidden --reverse --no-sort --exact"
+
+# --- modes ---
+
+browse_files() {
+  # build fd / find exclude flags
+  local fd_args=()
+  for e in "${excludes[@]}"; do
+    fd_args+=(--exclude "$e")
+  done
+
+  export FZF_DEFAULT_COMMAND="fdfind --type f --hidden ${fd_args[*]}"
+
+  fzf \
+    --query "$query" \
+    --preview "batcat --style=numbers --color=always {}" \
+    --border-label "╢ find: $(pwd) ╟" \
+    --footer $'enter:open  ctrl-y:copy path  esc:quit' \
+    --bind "ctrl-y:execute-silent(printf %s {} | xsel -bi)" \
+    --bind "enter:execute($editor {})" \
+    || true
+}
+
+grep_files() {
+  local rg_args=()
+  for e in "${excludes[@]}"; do
+    rg_args+=(--glob "!$e/")
+  done
+
+  rg --color=always --line-number --no-heading --hidden "${rg_args[@]}" -- "$grep_keyword" \
+    | fzf \
+        --ansi \
+        --query "$query" \
+        --delimiter : \
+        --preview "batcat --style=numbers --color=always --highlight-line {2} {1}" \
+        --preview-window '+{2}/2' \
+        --border-label "╢ grep: $grep_keyword ╟" \
+        --footer $'enter:open at line  ctrl-y:copy path  esc:quit' \
+        --bind "ctrl-y:execute-silent(printf '%s:%s' {1} {2} | xsel -bi)" \
+        --bind "enter:execute($editor +{2} {1})" \
+    || true
+}
+
+# --- dispatch ---
+
+if [ -n "$grep_keyword" ]; then
+  grep_files
+else
+  browse_files
+fi
