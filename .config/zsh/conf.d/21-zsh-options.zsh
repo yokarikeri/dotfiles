@@ -37,11 +37,11 @@ unsetopt CASE_GLOB       # Case-insensitive globbing.
 setopt EXTENDED_HISTORY       # Write the history file as ':start:elapsed;command'.
 setopt SHARE_HISTORY          # Share history in real time across all sessions.
 setopt HIST_EXPIRE_DUPS_FIRST # Expire duplicate entries first when trimming history.
-setopt HIST_REDUCE_BLANKS     # Remove superfluous whitespace from history entries.
+unsetopt HIST_REDUCE_BLANKS   # Remove superfluous whitespace from history entries.
 setopt HIST_IGNORE_SPACE      # Do not record commands that start with a space.
 setopt HIST_FIND_NO_DUPS      # Never show duplicate entries during history search.
-unsetopt HIST_SAVE_NO_DUPS    # Do not write duplicate entries to the history file.
-unsetopt HIST_IGNORE_DUPS     # Do not record the same command as the previous one.
+setopt HIST_SAVE_NO_DUPS      # Do not write duplicate entries to the history file.
+setopt HIST_IGNORE_DUPS       # Do not record the same command as the previous one.
 unsetopt HIST_IGNORE_ALL_DUPS # Remove older duplicate entries from history.
 unsetopt BANG_HIST            # Enable ! history expansion.
 setopt HIST_VERIFY            # Show the expanded command before executing it. (Do not disable for safety reasons.)

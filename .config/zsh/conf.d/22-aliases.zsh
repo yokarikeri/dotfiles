@@ -2,10 +2,15 @@
 #  Aliases
 # ================================
 
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+
 # eza: a modern ls replacement with icons and git status
 # https://github.com/eza-community/eza
 if (( $+commands[eza] )); then
   alias ll='eza -l --icons --group-directories-first --git'
+else
+  alias ll='ls -lah'
 fi
 
 # colordiff: colorized diff output

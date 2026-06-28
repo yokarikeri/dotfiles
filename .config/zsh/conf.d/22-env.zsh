@@ -23,14 +23,17 @@ if (( $+commands[nvim] )); then
   export EDITOR='nvim'
   export VISUAL='nvim'
   export MANPAGER='nvim +Man!'
+  git config --global core.editor nvim
 elif (( $+commands[vim] )); then
   export EDITOR='vim'
   export VISUAL='vim'
   export MANPAGER='less -X'
+  git config --global core.editor vim
 elif (( $+commands[vi] )); then
   export EDITOR='vi'
   export VISUAL='vi'
   export MANPAGER='less -X'
+  git config --global core.editor vi
 fi
 
 # Date and time format used by ls/eza and similar tools.

@@ -114,7 +114,7 @@ install_before = "7d"
 # "aqua:zizmorcore/zizmor" = "latest"       # Security scanner
 # "aqua:suzuki-shunsuke/pinact" = "latest"  # Version pinner
 
-## Seacret manager
+## Secret manager
 # "aqua:hashicorp/vault" = "latest" # Secret manager
 # "aqua:getsops/sops" = "latest"    # Secret encryption
 # "aqua:1password/cli" = "latest"   # Password manager (paid service)

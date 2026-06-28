@@ -28,6 +28,7 @@ apt:
 
 package_update: true
 package_upgrade: true
+package_reboot_if_required: true
 
 # Default packages: https://releases.ubuntu.com/resolute/ubuntu-26.04-wsl-amd64.manifest
 packages:
@@ -180,5 +181,3 @@ runcmd:
   # Claude Code
   # https://code.claude.com/docs/en/quickstart
   - sudo -u wsl-user bash -c "curl -fsSL https://claude.ai/install.sh | bash"
-
-package_reboot_if_required: true
