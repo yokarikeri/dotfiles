@@ -48,7 +48,7 @@ FZF_DEFAULT_OPTS="--height 50% --min-height 10 --border --margin 1 --padding 1 \
 --info hidden --reverse --no-sort --exact --no-mouse"
 
 # ================================
-#  Helper: disable bracketed paste while fzf is running
+#  Helper: toggle bracketed paste while fzf is running
 # ================================
 
 # Safe multi-line pasting into terminal emulators
@@ -56,6 +56,12 @@ FZF_DEFAULT_OPTS="--height 50% --min-height 10 --border --margin 1 --padding 1 \
 function _fzf_sanitize_bracketed_paste {
   if (( $+zle_bracketed_paste )); then
     print -n $zle_bracketed_paste[2]   # ESC[?2004l — disable bracketed paste
+  fi
+}
+
+function _fzf_restore_bracketed_paste {
+  if (( $+zle_bracketed_paste )); then
+    print -n $zle_bracketed_paste[1]   # ESC[?2004h — re-enable bracketed paste
   fi
 }
 
@@ -79,6 +85,7 @@ function fzf_history_selection {
     BUFFER="$(echo -nE "${history[$_history_num]}")"
     CURSOR="${#BUFFER}"
   fi
+  _fzf_restore_bracketed_paste
   zle -Rc
   zle reset-prompt
 }
@@ -98,6 +105,7 @@ function fzf_cdr_selection {
     BUFFER="cd $_selected_dir"
     CURSOR="${#BUFFER}"
   fi
+  _fzf_restore_bracketed_paste
   zle -Rc
   zle reset-prompt
 }
