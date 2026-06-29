@@ -1,0 +1,210 @@
+#cloud-config
+# Ubuntu-26.04-systemd.user-data: Systemd enabled environment with Docker CE.
+# ref. https://documentation.ubuntu.com/wsl/latest/
+# ref. https://docs.cloud-init.io/en/latest/reference/datasources/wsl.html
+
+# Ubuntu-26.04
+# wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-systemd
+# wsl --unregister Ubuntu-26.04-systemd
+
+timezone: Asia/Tokyo
+locale: ja_JP.UTF-8
+
+users:
+  - name: wsl-user
+    gecos: WSL User
+    # System Groups: https://wiki.debian.org/SystemGroups
+    groups: [users, sudo, adm] # netdev, audio, plugdev
+    shell: /usr/bin/zsh
+    lock_passwd: true
+    # sudo: "ALL=(ALL) NOPASSWD:ALL"
+
+apt:
+  sources:
+    git-core-ppa:
+      source: "ppa:git-core/ppa"
+    mise-ppa:
+      source: "ppa:jdxcode/mise"
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+
+# Default packages: https://releases.ubuntu.com/resolute/ubuntu-26.04-wsl-amd64.manifest
+packages:
+  # === WSL & Localization ===
+  - language-pack-ja # Japanese language support (main)
+  - manpages-ja # Japanese man pages
+  - manpages-ja-dev # Japanese man pages for developers
+
+  # === Shell ===
+  - starship # Cross-shell prompt
+  - tmux # Terminal multiplexer (main)
+  - zsh # Z shell (main)
+
+  # === System ===
+  - btop # replaces top / htop
+  - bubblewrap # Unprivileged sandboxing tool (main)
+  - cloud-image-utils # Cloud image management utilities (main)
+  - mise # dev tools, env vars, task runner (ppa)
+  - ncdu # replaces du
+  - pydf # replaces df
+
+  # === Editors & Pagers ===
+  - bat # replaces cat
+  - hexyl # replaces hexdump
+  - vim # replaces vi (main)
+  # - pspg # Postgres Pager
+
+  # === Search & File Utilities ===
+  - eza # replaces ls
+  - fd-find # replaces find
+  - fzf # fuzzy finder
+  - ripgrep # replaces grep
+  - tree # Directory listing program
+  # - ugrep # replaces grep
+
+  # === Text & Data Processing ===
+  - colordiff # replaces diff
+  - crudini # INI file utility
+  - csvkit # CSV file utility
+  - gron # Make JSON greppable
+  - highlight # Source code to formatted text converter
+  - jc # JSON Convert
+  - jq # JSON Query (main)
+  - xmlstarlet # XML toolkit
+  - yamllint # YAML linter
+  - yq # YAML processor
+  # - dasel # Data-Selector for JSON/YAML/TOML/XML/CSV/etc
+  # - miller # Data processing tool for CSV/JSON/etc
+  # - visidata # Terminal spreadsheet multitasker
+  # - xq # XML and HTML processor
+
+  # === Encoding & Line Endings ===
+  - dos2unix # DOS/Mac to UNIX format converter
+  - nkf # Network Kanji Filter
+  - uchardet # Encoding detector
+
+  # === Archiving & Compression ===
+  - 7zip # File archiver
+  - libarchive-tools # bsdtar, bsdcpio and bsdcat
+  - tar # GNU tar archiving utility (main)
+  - unzip # De-archiver for .zip files (main)
+  - zip # Archiver for .zip files (main)
+
+  # === Network & Download ===
+  - bind9-dnsutils # DNS utilities (main)
+  - bind9-host # DNS lookup utility (main)
+  - curl # Client URL (main)
+  - netcat-openbsd # TCP/IP swiss army knife (main)
+  - openssh-client # Secure shell client (main)
+  - socat # SOcket CAT (main)
+  - wget # retrieves files from the web (main)
+
+  # === Version Control & Diff ===
+  - git # Distributed version control system (ppa)
+  - git-delta # Syntax-highlighting pager for git
+  - git-flow # Git extensions for repo operations
+
+  # === Document & Clipboard ===
+  - pandoc # General markup converter
+  - xclip # CLI interface to X selections (main)
+  # - glow # Render markdown on the CLI
+  # - xsel # CLI program for accessing X clipboard
+
+write_files:
+  - path: /etc/wsl.conf
+    permissions: "0644"
+    content: |
+      # ref. https://learn.microsoft.com/en-us/windows/wsl/wsl-config
+      # ref. https://documentation.ubuntu.com/wsl/stable/reference/instance_configuration/
+
+      [boot]
+      systemd = true
+
+      [interop]
+      # For fast startup
+      appendWindowsPath = false
+      #enabled = true
+
+      [user]
+      default = wsl-user
+
+      [network]
+      hostname = u26w-systemd
+      #generateHosts = true
+      #generateResolvConf = true
+
+  # Alternative to clip.exe
+  - path: /usr/local/bin/clip.exe
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+
+      # @(#) clip.exe wrapper for WSL
+
+      # Reasons to use xclip:
+      # - Uses LF line endings.
+      # - Can be used even when WSL interoperability is disabled.
+      if [ -n "$DISPLAY" ] && which xclip >/dev/null 2>&1; then
+        xclip -selection clipboard && exit 0
+      fi
+
+      # Windows clip.exe — search all mounted Windows drives
+      # iconv -t utf16 produces UTF-16 with BOM; tail -c +3 strips it,
+      # leaving raw UTF-16LE that clip.exe interprets correctly
+      for _mnt_point in $(LANG=C df -T | awk '$2 == "9p" && $1 ~ /^[A-Z]:\\$/ {print $NF}'); do
+        _clip_path="$_mnt_point/Windows/System32/clip.exe"
+        if [ -x "$_clip_path" ]; then
+          iconv -t utf16 | tail -c +3 | "$_clip_path" && exit 0
+        fi
+      done
+
+      exit 1
+
+runcmd:
+  # Locale overrides on top of LANG=ja_JP.UTF-8:
+  #   LC_MESSAGES=C.UTF-8 - keep error/log messages in English for easier troubleshooting
+  #   LC_TIME=en_DK.UTF-8 - ISO 8601 date/time format (YYYY-MM-DD, 24h)
+  #   LC_COLLATE=C.UTF-8  - byte-order collation for deterministic sort
+  - locale-gen en_DK.UTF-8
+  - localectl set-locale LANG=ja_JP.UTF-8 LC_MESSAGES=C.UTF-8 LC_COLLATE=C.UTF-8 LC_TIME=en_DK.UTF-8
+
+  # Disable root login
+  # https://documentation.ubuntu.com/wsl/stable/explanation/security-overview/#disable-root-login
+  - sed -i 's/^root.*$/root:x:0:0:root:\/root:\/usr\/sbin\/nologin/' /etc/passwd
+
+  # Requires a password change upon initial login
+  - passwd -d wsl-user
+  - chage -d 0 wsl-user
+
+  # dotfiles
+  # Fork this repo on GitHub and replace the URL below with your fork's URL.
+  - sudo -u wsl-user git clone https://github.com/yokarikeri/dotfiles.git "$HOME/.dotfiles"
+  - sudo -u wsl-user sh "$HOME/.dotfiles/install.sh" -y
+
+  # editor: Nano -> Vim
+  - update-alternatives --set editor /usr/bin/vim.basic
+
+  # Claude Code
+  # https://code.claude.com/docs/en/quickstart
+  - sudo -u wsl-user bash -c "curl -fsSL https://claude.ai/install.sh | bash"
+
+  # Docker CE
+  # https://docs.docker.com/engine/install/ubuntu/
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - |
+    tee /etc/apt/sources.list.d/docker.sources <<EOF
+    Types: deb
+    URIs: https://download.docker.com/linux/ubuntu
+    Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+    Components: stable
+    Architectures: $(dpkg --print-architecture)
+    Signed-By: /etc/apt/keyrings/docker.asc
+    EOF
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - usermod -aG docker wsl-user

@@ -1,10 +1,10 @@
 # CLAUDE.md
 
 ## Repository Purpose
-Dotfiles for the WSL environment defined in `docs/Ubuntu-26.04-devcli.user-data`.
+Dotfiles for the WSL environments provisioned by the cloud-init user-data under `windows/cloud-init/`.
 
 Target environment:
-- Ubuntu 26.04 on WSL2, systemd disabled
+- Ubuntu 26.04 on WSL2 (systemd optional: `devcli` disabled, `systemd` enabled)
 - Default shell: zsh
 - Installed via `install.sh`, which copies tracked files into `$HOME` (not symlinks)
 

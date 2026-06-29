@@ -1,7 +1,7 @@
 # dotfiles
 
 XDG-compliant dotfiles for a WSL2 Ubuntu 26.04 zsh dev environment.
-Companion to [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) (cloud-init provisioning).
+Companion to the cloud-init user-data under [windows/cloud-init/](windows/cloud-init/) (WSL provisioning).
 
 Designed to be **forked and customised** — see [Workflows](#workflows) below.
 
@@ -105,10 +105,12 @@ graph TD
 ├── .claude/                  # Claude Code settings and custom skills
 ├── .local/bin/               # WSL helper scripts
 ├── docs/
-│   ├── Ubuntu-26.04-devcli.user-data  # cloud-init user-data for WSL setup
 │   ├── windows-setup.md               # Finishing the Windows setup (manual)
 │   └── ubuntu-pro-for-wsl.md          # Ubuntu Pro for WSL setup (optional)
 ├── windows/
+│   ├── cloud-init/
+│   │   ├── Ubuntu-26.04-devcli.user-data   # cloud-init user-data (systemd disabled)
+│   │   └── Ubuntu-26.04-systemd.user-data  # cloud-init user-data (systemd + Docker CE)
 │   ├── setup.ps1             # Windows 11 base setup script
 │   └── packages.csv          # winget package list for setup.ps1
 ├── lib.sh                    # Shared helpers (sourced by the scripts below)
@@ -122,9 +124,20 @@ graph TD
 
 - **zsh**, **git** (required)
 - **starship**, **mise**, **tmux**, **vim**, **fzf** (optional; all provisioned
-  by the cloud-init `packages:` list in [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data))
+  by the cloud-init `packages:` list in [windows/cloud-init/Ubuntu-26.04-devcli.user-data](windows/cloud-init/Ubuntu-26.04-devcli.user-data))
 
 ## Setup
+
+### WSL variants
+
+Two user-data files are available under `windows/cloud-init/`. Each becomes an
+independent WSL distro — install one, or both side by side. The filename must
+match the `--name` passed to `wsl --install` (cloud-init auto-detects it).
+
+| user-data file | WSL `--name` | systemd | Highlights |
+| --- | --- | --- | --- |
+| [`Ubuntu-26.04-devcli.user-data`](windows/cloud-init/Ubuntu-26.04-devcli.user-data) | `Ubuntu-26.04-devcli` | disabled | daily-use, fast startup |
+| [`Ubuntu-26.04-systemd.user-data`](windows/cloud-init/Ubuntu-26.04-systemd.user-data) | `Ubuntu-26.04-systemd` | enabled | Docker CE, localectl |
 
 ### Provisioning a fresh WSL machine
 
@@ -137,14 +150,17 @@ Follow these steps in order:
    [docs/ubuntu-pro-for-wsl.md](docs/ubuntu-pro-for-wsl.md)
 4. **(optional) Fork this repo and update the two references** →
    see [Workflows › Fork-based](#fork-based-recommended-for-customisation)
-5. **Start the WSL distro** from PowerShell:
+5. **Start one or more WSL distros** from PowerShell (each is an independent instance):
 
    ```powershell
+   # systemd disabled (daily-use, fast startup)
    wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
+
+   # systemd enabled (Docker CE, localectl)
+   wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-systemd
    ```
 
-   cloud-init picks up
-   [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) automatically,
+   cloud-init picks up the matching file from `windows/cloud-init/` automatically,
    installs packages, clones the repo, and runs `install.sh -y`.
 
 #### Step 1 in detail — Prepare Windows 11
@@ -155,7 +171,7 @@ Run [windows/setup.ps1](windows/setup.ps1) on the Windows host. It:
 - Installs Windows Terminal, Git for Windows, and VS Code via winget
   (package list in [windows/packages.csv](windows/packages.csv))
 - Installs the PlemolJP NF console font
-- Places `~\.cloud-init\Ubuntu-26.04-devcli.user-data` so WSL picks it up automatically
+- Places `~\.cloud-init\Ubuntu-26.04-devcli.user-data` and `~\.cloud-init\Ubuntu-26.04-systemd.user-data` so WSL picks them up automatically
 
 ```powershell
 # Download and inspect, then run
@@ -222,7 +238,7 @@ catalogue of tools to choose from, along with a quick-reference cheatsheet.
 
 Fork this repo on GitHub, then update these two references to point to your fork:
 
-- [`docs/Ubuntu-26.04-devcli.user-data`](docs/Ubuntu-26.04-devcli.user-data) line ~185 — the `git clone` URL used by cloud-init
+- [`windows/cloud-init/Ubuntu-26.04-devcli.user-data`](windows/cloud-init/Ubuntu-26.04-devcli.user-data) line ~185 — the `git clone` URL used by cloud-init
 - [`windows/setup.ps1`](windows/setup.ps1) `$RepoBase` variable — the raw URL base used to fetch `packages.csv` and the user-data file
 
 **Initial setup**

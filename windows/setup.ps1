@@ -176,20 +176,26 @@ Write-Ok 'PlemolJP NF installed.'
 
 Write-Step '4/4' 'Placing cloud-init user-data...'
 
-# The filename must match the WSL instance name passed to --name.
-$cloudInitDir  = Join-Path $env:USERPROFILE '.cloud-init'
-$userDataName  = 'Ubuntu-26.04-devcli.user-data'
-$userDataDest  = Join-Path $cloudInitDir $userDataName
-$userDataUrl   = "$RepoBase/docs/$userDataName"
+# Each filename must match the WSL instance name passed to --name.
+$cloudInitDir   = Join-Path $env:USERPROFILE '.cloud-init'
+$userDataNames  = @(
+    'Ubuntu-26.04-devcli.user-data'
+    'Ubuntu-26.04-systemd.user-data'
+)
 
 if (-not (Test-Path $cloudInitDir)) { New-Item $cloudInitDir -ItemType Directory | Out-Null }
 
-if (Test-Path $userDataDest) {
-    Write-Warn "$userDataDest already exists and will be overwritten."
-}
+foreach ($userDataName in $userDataNames) {
+    $userDataDest = Join-Path $cloudInitDir $userDataName
+    $userDataUrl  = "$RepoBase/windows/cloud-init/$userDataName"
 
-Invoke-WebRequest -Uri $userDataUrl -OutFile $userDataDest -UseBasicParsing
-Write-Ok "User-data saved to $userDataDest"
+    if (Test-Path $userDataDest) {
+        Write-Warn "$userDataDest already exists and will be overwritten."
+    }
+
+    Invoke-WebRequest -Uri $userDataUrl -OutFile $userDataDest -UseBasicParsing
+    Write-Ok "User-data saved to $userDataDest"
+}
 
 # ---------------------------------------------------------------------------
 # Done — print next steps
@@ -209,8 +215,12 @@ Next steps
   $USERPROFILE\.cloud-init\Ubuntu-26.04-devcli.user-data (line ~185)
   with your fork's URL so the WSL distro pulls your own config.
 
-Start the WSL distro (run in PowerShell or Windows Terminal):
+Start a WSL distro (run in PowerShell or Windows Terminal):
+  # systemd disabled (daily-use, fast startup)
   wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
+
+  # systemd enabled (Docker CE, localectl)
+  wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-systemd
 
 A reboot is recommended to fully apply WSL and font changes.
 '@
