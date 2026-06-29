@@ -2,15 +2,22 @@
 
 # @(#) Start a tmux server for popups
 
-# Intended to be bound to display-popup
-# Usage: bind P display-popup -E -d '#{pane_current_path}' -w 100% -h 100% "$HOME/.local/bin/tmux-popup.sh"
+# Intended to be invoked via run-shell so that tmux expands #{...} format
+# strings before the shell sees them:
+#   bind P run-shell "tmux display-popup -E -d '#{pane_current_path}' \
+#     -w 100% -h 100% '$HOME/.local/bin/tmux-popup.sh' '#{session_name}'"
+#
+# Note: passing #{session_name} as a direct argument to display-popup or via
+# its -e option does NOT expand format strings; run-shell is required.
 
 # Save the current directory (the working directory specified by the caller's -d option)
 pane_path="$PWD"
 
-# Hash the path (sanitize forbidden characters like slashes for the session name & truncate to 8 characters)
-# Using the current directory's path for the session name allows retaining the state when the popup is reopened
-session_name="popup_$(echo -n "$pane_path" | md5sum | cut -c1-8)"
+# Hash the path + parent session name so that the same directory opened from
+# different tmux sessions gets separate popups, while reopening from the same
+# session reattaches to the existing one.
+# $1 receives #{session_name} expanded by run-shell (e.g. "vscode", "wt").
+session_name="popup_$(printf '%s\n%s' "$pane_path" "$1" | md5sum | cut -c1-8)"
 
 # Start a popup server separate from the main tmux server
 # 'new-session -A' attaches to the session if it exists, or creates a new one if it doesn't
