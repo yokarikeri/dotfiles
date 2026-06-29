@@ -130,6 +130,24 @@ catalogue of tools to choose from, along with a quick-reference cheatsheet.
 
 ### Fresh WSL provisioning
 
+#### 1. Prepare Windows 11
+
+Run [windows/setup.ps1](windows/setup.ps1) on the Windows host first. It:
+
+- Enables WSL
+- Installs Windows Terminal, Git for Windows, and VS Code via winget
+  (package list in [windows/packages.csv](windows/packages.csv))
+- Installs the PlemolJP NF console font
+- Places `~/.cloud-init/Ubuntu-26.04-devcli.user-data` so WSL picks it up automatically
+
+```powershell
+# Download and inspect, then run
+irm https://raw.githubusercontent.com/yokarikeri/dotfiles/refs/heads/main/windows/setup.ps1 -OutFile setup.ps1
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
+#### 2. Start the WSL distro
+
 Pass [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) as cloud-init user-data when
 creating a new WSL instance. It installs packages, clones this repo, and runs
 `install.sh -y` automatically:
@@ -144,8 +162,10 @@ See [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) for
 
 ### Fork-based (recommended for customisation)
 
-Fork this repo on GitHub, then replace the URL in
-[docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) (line 184) with your fork's URL.
+Fork this repo on GitHub, then update these two references to point to your fork:
+
+- [`docs/Ubuntu-26.04-devcli.user-data`](docs/Ubuntu-26.04-devcli.user-data) line ~185 — the `git clone` URL used by cloud-init
+- [`windows/setup.ps1`](windows/setup.ps1) `$RepoBase` variable — the raw URL base used to fetch `packages.csv` and the user-data file
 
 **Initial setup**
 

@@ -1,0 +1,7 @@
+Name,Id,Source,Override
+Windows Terminal,9N0DX20HK701,msstore,
+Git for Windows,Git.Git,winget,"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /COMPONENTS=icons,ext,ext\reg\shellhere,ext\reg\guihere,assoc,assoc_sh"
+VS Code,Microsoft.VisualStudioCode,winget,"/mergetasks=!runcode,addcontextmenufiles,addcontextmenufolders"
+# PowerShell 7,9MZ1SNWT0N5D,msstore,
+# 7-Zip,7zip.7zip,winget,
+# Google Chrome,Google.Chrome,winget,
