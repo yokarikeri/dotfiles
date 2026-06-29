@@ -2,9 +2,20 @@
 #  Environment Variables
 # ================================
 
-export LANG='en_US.UTF-8'
-export LC_CTYPE="$LANG"
-export LC_TERMINAL="${${LANG:e}:-UTF-8}"
+# Prefer nvim > vim > vi as the default editor.
+if (( $+commands[nvim] )); then
+  export EDITOR='nvim'
+  export VISUAL='nvim'
+  export MANPAGER='nvim +Man!'
+elif (( $+commands[vim] )); then
+  export EDITOR='vim'
+  export VISUAL='vim'
+  export MANPAGER='less -X'
+elif (( $+commands[vi] )); then
+  export EDITOR='vi'
+  export VISUAL='vi'
+  export MANPAGER='less -X'
+fi
 
 export PAGER='less'
 
@@ -17,24 +28,6 @@ export PAGER='less'
 #   -F  quit immediately if output fits on one screen
 export LESS='--ignore-case --jump-target=4 --RAW-CONTROL-CHARS --HILITE-UNREAD --no-init --quit-if-one-screen'
 export LESSCHARSET='utf-8'
-
-# Prefer nvim > vim > vi as the default editor.
-if (( $+commands[nvim] )); then
-  export EDITOR='nvim'
-  export VISUAL='nvim'
-  export MANPAGER='nvim +Man!'
-  git config --global core.editor nvim
-elif (( $+commands[vim] )); then
-  export EDITOR='vim'
-  export VISUAL='vim'
-  export MANPAGER='less -X'
-  git config --global core.editor vim
-elif (( $+commands[vi] )); then
-  export EDITOR='vi'
-  export VISUAL='vi'
-  export MANPAGER='less -X'
-  git config --global core.editor vi
-fi
 
 # Date and time format used by ls/eza and similar tools.
 # Format: YYYY-MM-DD Weekday hh:mm:ss

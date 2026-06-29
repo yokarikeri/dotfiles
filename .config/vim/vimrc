@@ -23,6 +23,9 @@ set matchtime=1       " Match highlight duration (0.1s)
 set wildmenu          " Visual menu for command completion
 set ruler             " Show cursor position in status bar
 
+" Enable mouse (wheel scroll, etc.); tmux forwards wheel events to alternate-screen apps
+set mouse=a
+
 " Visible characters for tabs and trailing spaces
 set list
 set listchars=tab:»-,trail:-,eol:↲,extends:»,precedes:«

@@ -70,7 +70,7 @@ browse_files() {
     --preview "batcat --style=numbers --color=always {}" \
     --border-label "╢ find: $(pwd) ╟" \
     --footer $'enter:open  ctrl-y:copy path  esc:quit' \
-    --bind "ctrl-y:execute-silent(printf %s {} | xsel -bi)" \
+    --bind "ctrl-y:execute-silent(printf %s {} | xclip -selection clipboard >/dev/null 2>&1)" \
     --bind "enter:execute($editor {})" \
     || true
 }
@@ -90,7 +90,7 @@ grep_files() {
         --preview-window '+{2}/2' \
         --border-label "╢ grep: $grep_keyword ╟" \
         --footer $'enter:open at line  ctrl-y:copy path  esc:quit' \
-        --bind "ctrl-y:execute-silent(printf '%s:%s' {1} {2} | xsel -bi)" \
+        --bind "ctrl-y:execute-silent(printf '%s:%s' {1} {2} | xclip -selection clipboard >/dev/null 2>&1)" \
         --bind "enter:execute($editor +{2} {1})" \
     || true
 }

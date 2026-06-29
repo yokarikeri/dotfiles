@@ -2,6 +2,7 @@
   "env": {
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1"
   },
+  "language": "japanese",
   "permissions": {
     "deny": [
       "Read(./.env)",

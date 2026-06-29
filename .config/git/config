@@ -4,7 +4,6 @@
 
 [core]
 	pager = delta
-	editor = vim
 [rebase]
 	autoStash = true
 [commit]

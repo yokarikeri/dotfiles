@@ -28,6 +28,7 @@ if (( $+commands[fdfind] )) && ! (( $+commands[fd] )); then
   alias fd='fdfind'
 fi
 
+# fzf-preview
 if (( $+commands[fzf-preview] )) && ! (( $+commands[fp] )); then
   alias fp='fzf-preview'
 fi
