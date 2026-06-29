@@ -1,0 +1,141 @@
+#!/bin/sh
+# lib.sh — shared helpers sourced by install/update/import/uninstall scripts.
+# Not intended to be executed directly.
+
+# ---------------------------------------------------------------------------
+# Logging
+
+die()  { printf '%s\n' "$*" >&2; exit 1; }
+info() { printf '  %s\n' "$*"; }
+ok()   { printf '  \033[32m✓\033[0m %s\n' "$*"; }
+warn() { printf '  \033[33m!\033[0m %s\n' "$*"; }
+
+# ---------------------------------------------------------------------------
+# Confirmation
+
+# Prompt for yes/no. Returns 0 on yes, 1 on no.
+# Skipped when ASSUME_YES=1 (always returns 0).
+confirm() {
+  if [ "${ASSUME_YES:-0}" = "1" ]; then return 0; fi
+  printf '  %s [y/N] ' "$*"
+  read -r _ans
+  case "$_ans" in [Yy]*) return 0 ;; *) return 1 ;; esac
+}
+
+# ---------------------------------------------------------------------------
+# Managed file list
+
+MANIFEST_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/manifest.txt"
+
+# Emit $HOME-relative paths of all git-tracked files that belong in $HOME.
+tracked_files() {
+  git -C "$REPO_DIR" ls-files \
+    | grep -E '^(\.zshenv$|\.config/|\.claude/|\.local/)'
+}
+
+# Like tracked_files, plus derived entries (files written by copy_one
+# that have no 1:1 repo counterpart).
+managed_files() {
+  local _all
+  _all="$(git -C "$REPO_DIR" ls-files)"
+  printf '%s\n' "$_all" | grep -E '^(\.zshenv$|\.config/|\.claude/|\.local/)'
+  # .local/bin/tmux-popup.sh is a derived copy of .config/tmux/tmux-popup.sh
+  if printf '%s\n' "$_all" | grep -q '^\.config/tmux/tmux-popup\.sh$'; then
+    printf '.local/bin/tmux-popup.sh\n'
+  fi
+}
+
+write_manifest() {
+  mkdir -p "$(dirname "$MANIFEST_FILE")"
+  managed_files | sort -u > "$MANIFEST_FILE"
+  ok "Manifest updated: $MANIFEST_FILE"
+}
+
+# ---------------------------------------------------------------------------
+# starship.toml helpers
+
+# Return true if $1 is a semantic version strictly less than $2.
+version_lt() {
+  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ] && [ "$1" != "$2" ]
+}
+
+# Resolve the real Linux path of Windows USERPROFILE, or print nothing.
+# Uses </dev/null on external commands so stdin is not consumed when called
+# from inside a read loop that has a pipe as its stdin.
+_get_userprofile() {
+  if command -v wslvar > /dev/null 2>&1 && command -v wslpath > /dev/null 2>&1; then
+    _wp="$(wslvar USERPROFILE 2>/dev/null </dev/null)"
+    [ -n "$_wp" ] && wslpath "$_wp" 2>/dev/null </dev/null || true
+  fi
+}
+
+STARSHIP_PLACEHOLDER='/mnt/c/Users/username'
+
+# Copy repo's starship.toml to $1, applying USERPROFILE substitution and compat patch.
+apply_starship_transform() {
+  local dst="$1"
+  cp "$REPO_DIR/.config/starship.toml" "$dst"
+  local _up
+  _up="$(_get_userprofile)"
+  [ -n "$_up" ] && sed -i "s|${STARSHIP_PLACEHOLDER}|${_up}|g" "$dst" || true
+  local _ver=""
+  command -v starship > /dev/null 2>&1 && \
+    _ver="$(starship --version 2>/dev/null </dev/null | awk 'NR==1{print $2}')" || true
+  if [ -n "$_ver" ] && version_lt "$_ver" "1.23.0"; then
+    patch -s "$dst" < "$REPO_DIR/patches/starship-v1.22.1-compat.patch"
+  fi
+}
+
+# Reverse USERPROFILE substitution on $1 in-place. Best-effort compat patch reversal.
+reverse_starship_transform() {
+  local file="$1"
+  local _up
+  _up="$(_get_userprofile)"
+  [ -n "$_up" ] && sed -i "s|${_up}|${STARSHIP_PLACEHOLDER}|g" "$file" || true
+  local _ver=""
+  command -v starship > /dev/null 2>&1 && \
+    _ver="$(starship --version 2>/dev/null </dev/null | awk 'NR==1{print $2}')" || true
+  if [ -n "$_ver" ] && version_lt "$_ver" "1.23.0"; then
+    if patch -R --dry-run -s "$file" < "$REPO_DIR/patches/starship-v1.22.1-compat.patch" \
+        > /dev/null 2>&1; then
+      patch -R -s "$file" < "$REPO_DIR/patches/starship-v1.22.1-compat.patch"
+    else
+      warn "Could not reverse starship compat patch — review .config/starship.toml manually before committing."
+    fi
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Copy one managed file
+
+# Copy the repo's version of <relpath> to $HOME/<relpath>.
+# Handles starship transform, tmux-popup.sh source mapping, executable bits,
+# and migration of old repo-pointing symlinks.
+copy_one() {
+  local relpath="$1"
+  local dst="$HOME/$relpath"
+
+  # Migrate: remove old symlinks that pointed into the repo.
+  if [ -L "$dst" ]; then
+    case "$(readlink "$dst")" in
+      "$REPO_DIR"|"$REPO_DIR/"*) rm -f "$dst" ;;
+    esac
+  fi
+
+  mkdir -p "$(dirname "$dst")"
+
+  if [ "$relpath" = ".config/starship.toml" ]; then
+    apply_starship_transform "$dst"
+    ok "$dst (transformed)"
+  elif [ "$relpath" = ".local/bin/tmux-popup.sh" ]; then
+    # Source lives under .config/tmux/ in the repo.
+    cp -p "$REPO_DIR/.config/tmux/tmux-popup.sh" "$dst"
+    chmod +x "$dst"
+    ok "$dst"
+  else
+    cp -p "$REPO_DIR/$relpath" "$dst"
+    ok "$dst"
+  fi
+
+  case "$relpath" in .local/bin/*) chmod +x "$dst" ;; esac
+}

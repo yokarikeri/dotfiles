@@ -1,112 +1,49 @@
 #!/bin/sh
-# uninstall.sh — Remove symlinks created by install.sh and restore any backups.
+# uninstall.sh — Remove the dotfiles repo clone from $HOME.
 #
-# For each symlink that points into this repo:
-#   - Removes the symlink.
-#   - Restores <target>.bak -> <target> if a backup exists.
-#
-# Symlinks that exist but point elsewhere are left untouched with a warning.
-# Paths that do not exist are silently skipped.
-# Re-running this script is safe (idempotent).
+# Only the repo directory (~/.dotfiles) is deleted. Config files that were
+# copied to $HOME during install are NOT touched.
 #
 # Usage:
-#   sh uninstall.sh
-#   (Run from any directory; the repo root is resolved automatically.)
+#   sh uninstall.sh [-y]
+#
+#   -y, --yes  Skip the confirmation prompt.
 
 set -eu
 
-# Resolve the repository root (the directory that contains this script).
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# ---------------------------------------------------------------------------
+die() { printf '%s\n' "$*" >&2; exit 1; }
+ok()  { printf '  \033[32m✓\033[0m %s\n' "$*"; }
 
-die()  { printf '%s\n' "$*" >&2; exit 1; }
-info() { printf '  %s\n' "$*"; }
-ok()   { printf '  \033[32m✓\033[0m %s\n' "$*"; }
-warn() { printf '  \033[33m!\033[0m %s\n' "$*"; }
-
-# Remove $1 if it is a symlink pointing into $REPO_DIR, then restore $1.bak.
-remove_link() {
-  local link="$1"
-
-  if [ ! -e "$link" ] && [ ! -L "$link" ]; then
-    info "Skipping $link (not found)"
-    return
-  fi
-
-  if [ -L "$link" ]; then
-    local dest
-    dest="$(readlink "$link")"
-    # Accept both exact-match and subpath-of REPO_DIR.
-    case "$dest" in
-      "$REPO_DIR"|"$REPO_DIR/"*)
-        rm "$link"
-        ok "Removed $link"
-        ;;
-      *)
-        warn "Skipping $link (points to $dest, not managed by this repo)"
-        return
-        ;;
-    esac
-  else
-    warn "Skipping $link (not a symlink; remove manually if needed)"
-    return
-  fi
-
-  if [ -e "${link}.bak" ]; then
-    mv "${link}.bak" "$link"
-    ok "Restored ${link}.bak -> $link"
-  fi
-}
-
-# Remove repo-pointing child symlinks from real directory $1, then rmdir if empty.
-remove_dir_contents() {
-  local dest="$1"
-  if [ ! -d "$dest" ] || [ -L "$dest" ]; then
-    info "Skipping $dest (not found)"
-    return
-  fi
-  for link in "$dest"/* "$dest"/.[!.]*; do
-    [ -L "$link" ] || continue
-    remove_link "$link"
-  done
-  rmdir "$dest" 2>/dev/null && ok "Removed empty $dest" || true
-}
-
-# ---------------------------------------------------------------------------
-
-printf '\nUninstalling dotfiles (repo: %s)\n\n' "$REPO_DIR"
-
-# ~/.zshenv
-remove_link "$HOME/.zshenv"
-
-# ~/.config/zsh
-remove_dir_contents "$HOME/.config/zsh"
-
-# ~/.config/git/config
-remove_link "$HOME/.config/git/config"
-
-# ~/.config/starship.toml
-remove_link "$HOME/.config/starship.toml"
-
-# ~/.config/mise/config.toml
-remove_link "$HOME/.config/mise/config.toml"
-
-# ~/.config/tmux
-remove_dir_contents "$HOME/.config/tmux"
-
-# ~/.config/vim
-remove_dir_contents "$HOME/.config/vim"
-
-# ~/.claude
-remove_dir_contents "$HOME/.claude"
-
-# ~/.local/bin/<script> — one link per file in .local/bin
-for src in "$REPO_DIR/.local/bin/"*; do
-  remove_link "$HOME/.local/bin/$(basename "$src")"
+ASSUME_YES=0
+for _arg do
+  case "$_arg" in
+    -y|--yes) ASSUME_YES=1 ;;
+    *) die "Unknown option: $_arg. Usage: sh uninstall.sh [-y]" ;;
+  esac
 done
 
-# tmux-popup.sh (sourced from .config/tmux, exposed in .local/bin)
-remove_link "$HOME/.local/bin/tmux-popup.sh"
+# ---------------------------------------------------------------------------
 
-printf '\nDone. Dotfile symlinks have been removed.\n\n'
+printf '\nThis will permanently remove the dotfiles repo:\n'
+printf '  %s\n\n' "$REPO_DIR"
+printf '  Config files already copied to %s will NOT be affected.\n\n' "$HOME"
+
+if [ "$ASSUME_YES" != "1" ]; then
+  printf '  Remove repo? [y/N] '
+  read -r _ans
+  case "$_ans" in
+    [Yy]*) ;;
+    *) printf '\nAborted.\n\n'; exit 0 ;;
+  esac
+  printf '\n'
+fi
+
+# cd out of the repo before deleting it.
+cd "$HOME"
+rm -rf "$REPO_DIR"
+ok "Removed $REPO_DIR"
+
+printf '\nDone. The dotfiles repo has been removed.\n'
+printf 'Your config files in %s remain in place.\n\n' "$HOME"

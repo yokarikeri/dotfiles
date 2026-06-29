@@ -181,8 +181,9 @@ runcmd:
   - chage -d 0 wsl-user
 
   # dotfiles
-  - sudo -u wsl-user git clone --recursive https://github.com/yokarikeri/dotfiles.git "$HOME/.dotfiles"
-  - sudo -u wsl-user sh "$HOME/.dotfiles/install.sh"
+  # Fork this repo on GitHub and replace the URL below with your fork's URL.
+  - sudo -u wsl-user git clone https://github.com/yokarikeri/dotfiles.git "$HOME/.dotfiles"
+  - sudo -u wsl-user sh "$HOME/.dotfiles/install.sh" -y
 
   # editor: Nano -> Vim
   - update-alternatives --set editor /usr/bin/vim.basic

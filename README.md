@@ -3,6 +3,8 @@
 XDG-compliant dotfiles for a WSL2 Ubuntu 26.04 zsh dev environment.
 Companion to [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) (cloud-init provisioning).
 
+Designed to be **forked and customised** — see [Workflows](#workflows) below.
+
 ## Features
 
 - **XDG Base Directory** layout throughout — `ZDOTDIR=~/.config/zsh` set in
@@ -24,8 +26,11 @@ Companion to [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-
   `wslvar` (read Windows env vars), `claude-clip` (clipboard bridge).
 - **Claude Code settings** tracked under `.claude/` (settings, status-line
   script, custom skills).
-- **Idempotent installer** — `install.sh` creates symlinks, backs up differing
-  pre-existing files to `*.bak`, and removes identical ones. Safe to re-run.
+- **Copy-based installer** — `install.sh` copies files from the repo into
+  `$HOME`, prompts for confirmation (or pass `-y`), and migrates old
+  symlink-based installs automatically. `--clean` removes files dropped from
+  the repo. New tracked files are picked up on the next `install.sh` run
+  without any manual wiring.
 
 ## Directory structure
 
@@ -48,8 +53,11 @@ Companion to [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-
 ├── .local/bin/               # WSL helper scripts
 ├── docs/
 │   └── Ubuntu-26.04-devcli.user-data  # cloud-init user-data for WSL setup
-├── install.sh
-└── uninstall.sh
+├── lib.sh                    # Shared helpers (sourced by the scripts below)
+├── install.sh                # Copy repo files into $HOME
+├── update.sh                 # Pull latest + re-copy (respects local edits)
+├── import.sh                 # Push $HOME edits back into the repo
+└── uninstall.sh              # Remove the repo clone
 ```
 
 ## Requirements
@@ -61,14 +69,21 @@ Companion to [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-
 ## Install
 
 ```sh
-git clone --recursive https://github.com/yokarikeri/dotfiles.git ~/.dotfiles
+git clone https://github.com/yokarikeri/dotfiles.git ~/.dotfiles
 sh ~/.dotfiles/install.sh
+```
+
+A confirmation prompt lists the files to be copied. Pass `-y` to skip it
+(useful in scripts and cloud-init):
+
+```sh
+sh ~/.dotfiles/install.sh -y
 ```
 
 Open a new shell. On first start, missing zsh plugins are cloned automatically.
 
-Re-running `install.sh` is safe — it updates symlinks, backs up differing files
-to `*.bak`, and skips files that are already identical.
+Re-running `install.sh` is safe — it overwrites managed files and migrates any
+old symlinks to real files.
 
 ## Uninstall
 
@@ -76,33 +91,31 @@ to `*.bak`, and skips files that are already identical.
 sh ~/.dotfiles/uninstall.sh
 ```
 
-Only symlinks that point into this repo are removed. Any `*.bak` backups created
-during install are restored. Symlinks you created yourself are left untouched.
+Removes the `~/.dotfiles` repo clone after confirmation. Config files that were
+copied to `$HOME` are **not** touched — your environment keeps working.
 
 ## Usage
 
 ### Editing config
 
-Tracked config files are symlinks into the repo, so edits go directly to the
-repo. Changes take effect on the next shell (or `exec zsh` for zsh config).
+Config files are plain copies in `$HOME`. Editing them does **not** affect the
+repo. To send your edits back to the repo, use `import.sh`.
 
-`~/.config/zsh`, `~/.config/tmux`, `~/.config/vim`, and `~/.claude` are real
-directories (not directory symlinks) — only their tracked contents are linked.
-This keeps runtime-generated files (e.g. `.zcompdump`, `.credentials.json`)
-out of the repo.
+```sh
+# After editing ~/.config/zsh/conf.d/22-aliases.zsh, for example:
+sh ~/.dotfiles/import.sh
+```
 
-To add a zsh config fragment, create `.config/zsh/conf.d/NN-name.zsh`. The
-numeric prefix controls load order (e.g. `30-` for completion-related setup).
+`import.sh` copies changed files into the repo, shows `git diff`, and prints
+the commands to commit and push. It does not commit anything automatically.
 
 ### Adding a new dotfile
 
-1. Add the file to the repo under the appropriate path.
-2. Wire the symlink in `install.sh` (follow the existing pattern).
-3. Re-run `sh install.sh`.
+1. Add the file to the repo under its `$HOME`-relative path and `git add` it.
+2. Re-run `sh install.sh` to copy it to `$HOME`.
 
-Files added directly under `~/.config/zsh/`, `~/.config/tmux/`, `~/.config/vim/`,
-or `.claude/` are not automatically linked — re-running `install.sh` is required
-to create the new symlink.
+No manual wiring in `install.sh` is needed — `install.sh` auto-discovers all
+git-tracked files under `.zshenv`, `.config/`, `.claude/`, and `.local/bin/`.
 
 ### Managing tools with mise
 
@@ -115,25 +128,82 @@ mise upgrade                   # upgrade all tools
 The global config at `.config/mise/config.toml` contains a commented-out
 catalogue of tools to choose from, along with a quick-reference cheatsheet.
 
-### Syncing across machines
-
-```sh
-cd ~/.dotfiles
-git pull
-sh install.sh   # picks up any newly added symlinks
-```
-
 ### Fresh WSL provisioning
 
 Pass [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) as cloud-init user-data when
 creating a new WSL instance. It installs packages, clones this repo, and runs
-`install.sh` automatically:
+`install.sh -y` automatically:
 
 ```sh
 wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
 ```
 
 See [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) for the full setup.
+
+## Workflows
+
+### Fork-based (recommended for customisation)
+
+Fork this repo on GitHub, then replace the URL in
+[docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) (line 184) with your fork's URL.
+
+**Initial setup**
+
+```sh
+# Clone your fork
+git clone https://github.com/<you>/dotfiles.git ~/.dotfiles
+
+# Add the upstream repo so you can pull improvements later
+git -C ~/.dotfiles remote add upstream https://github.com/yokarikeri/dotfiles.git
+
+# Copy files into $HOME
+sh ~/.dotfiles/install.sh
+```
+
+**Daily use**
+
+```sh
+# After editing config files in $HOME, import them into the repo:
+sh ~/.dotfiles/import.sh
+# Then review git diff, commit, and push:
+cd ~/.dotfiles && git add -p && git commit -m "…" && git push
+```
+
+**Pulling upstream improvements**
+
+```sh
+# Fetch and merge changes from the original repo, then re-copy:
+sh ~/.dotfiles/update.sh --upstream
+```
+
+Files you have edited locally ("diverged" files) are **not** overwritten —
+their upstream diff is shown instead. Apply small changes manually; for larger
+changes, run `import.sh` first to commit your version, then merge.
+
+**Syncing your fork to another machine**
+
+```sh
+# On the second machine after cloning your fork and running install.sh:
+sh ~/.dotfiles/update.sh   # pulls from your fork's origin
+```
+
+### Direct use (no fork)
+
+Use as-is when you just want the config without maintaining a personal fork.
+
+```sh
+git clone https://github.com/yokarikeri/dotfiles.git ~/.dotfiles
+sh ~/.dotfiles/install.sh
+```
+
+**Pulling updates**
+
+```sh
+sh ~/.dotfiles/update.sh
+```
+
+Files you have edited locally are not overwritten — their diff is shown and
+you can decide whether to apply the upstream changes manually.
 
 ## Notes
 
