@@ -5,32 +5,85 @@ Companion to [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-
 
 Designed to be **forked and customised** — see [Workflows](#workflows) below.
 
-## Features
+## Concept
 
-- **XDG Base Directory** layout throughout — `ZDOTDIR=~/.config/zsh` set in
-  `.zshenv`; all tool configs live under `~/.config/`.
-- **Modular zsh config** — `conf.d/*.zsh` files are sourced in numeric order at
-  shell start (keybinds, options, aliases, env, path, completions, …).
-- **Framework-free plugins** — zsh-users plugins (`zsh-completions`,
-  `zsh-autosuggestions`, `zsh-syntax-highlighting`,
-  `zsh-history-substring-search`) are auto-cloned on first shell start; no
-  framework, no submodules.
-- **Starship prompt** — cross-shell, fast, configured at
-  `.config/starship.toml`.
-- **mise** — runtime version manager and task runner; global config at
-  `.config/mise/config.toml` with a commented-out tool catalogue to pick from.
-- **tmux** — config at `.config/tmux/tmux.conf`; includes a popup-shell helper
-  (`tmux-popup.sh`) exposed as `~/.local/bin/tmux-popup.sh`.
-- **Vim** — config at `.config/vim/vimrc`.
-- **WSL helpers** in `.local/bin/` — `wslview` (open files/URLs in Windows),
-  `wslvar` (read Windows env vars), `claude-clip` (clipboard bridge).
-- **Claude Code settings** tracked under `.claude/` (settings, status-line
-  script, custom skills).
-- **Copy-based installer** — `install.sh` copies files from the repo into
-  `$HOME`, prompts for confirmation (or pass `-y`), and migrates old
-  symlink-based installs automatically. `--clean` removes files dropped from
-  the repo. New tracked files are picked up on the next `install.sh` run
-  without any manual wiring.
+The default WSL 2 experience leaves a lot to be desired. These dotfiles aim to:
+
+- **Automate** WSL distro provisioning (cloud-init) and dotfiles deployment in one step
+- **Work out of the box** — zero manual config needed for a comfortable baseline
+- **Stay easy to customise** — minimal dependencies, readable configs, clear structure
+
+The result is a modern-by-default dev environment that you can adapt to your own taste.
+
+## What's included
+
+- **Login shell: [Zsh 5.9](https://packages.ubuntu.com/resolute/zsh) (resolute/main)**
+  - Config split by role into [`conf.d/*.zsh`](.config/zsh/conf.d/) files, sourced in numeric order
+  - `Ctrl-r` — fzf [command history](.config/zsh/conf.d/31-fzf.zsh) search
+  - `Ctrl-s` — fzf [recent-directory](.config/zsh/conf.d/31-fzf.zsh) search
+  - [SSH agent auto-start](.config/zsh/conf.d/31-ssh-agent.zsh)
+  - [tmux auto-start](.config/zsh/conf.d/91-tmux.zsh)
+  - Only zsh-users plugins: `zsh-completions`, `zsh-autosuggestions`,
+    `zsh-syntax-highlighting`, `zsh-history-substring-search` —
+    auto-cloned to `${XDG_DATA_HOME}/zsh/plugins` on first shell start; no framework, no submodules
+- **No Zsh framework**
+- **Prompt: [Starship 1.22.1](https://packages.ubuntu.com/resolute/starship) (resolute/universe)**
+  - configured at [`.config/starship.toml`](.config/starship.toml), Powerlevel10k classic style
+- **Package management: [apt](https://packages.ubuntu.com/resolute/apt) + [mise](https://mise.jdx.dev/)**
+  - Ubuntu official repos by default; [mise](.config/mise/config.toml) available when you need
+    the latest version of a tool
+- **Terminal multiplexer: [tmux 3.6](https://packages.ubuntu.com/resolute/tmux) (resolute/main)**
+  - config at [`.config/tmux/tmux.conf`](.config/tmux/tmux.conf); prefix key is `Alt-f`;
+    `Prefix Shift-P` opens/detaches a popup shell
+- **VCS: [git](https://git-scm.com/install/linux) (PPA) + [GitHub CLI](https://docs.github.com/en/github-cli/github-cli/quickstart) (mise)**
+  - default config at [`.config/git/config`](.config/git/config)
+- **Coding assistant: [Claude Code](https://docs.anthropic.com/en/docs/claude-code/)**
+  - settings and skills under [`.claude/`](.claude/); includes a practical
+    [status-line script](.claude/statusline-command.sh) and the `fcc` alias
+    ([`22-aliases.zsh`](.config/zsh/conf.d/22-aliases.zsh)) to copy Claude Code conversation
+    history to the clipboard as Markdown
+- **Misc**
+  - [XDG Base Directory](.config/zsh/conf.d/11-xdg.zsh) layout throughout
+  - Lightweight replacements for the deprecated [wslu](https://github.com/wslutilities/wslu)
+    utilities: [`wslvar`](.local/bin/wslvar) and [`wslview`](.local/bin/wslview)
+    (the standard `wslpath` is not deprecated)
+  - Minimal [vim config](.config/vim/vimrc)
+- **Copy-based installer** — `install.sh` copies files from the repo into `$HOME`, prompts for
+  confirmation (or pass `-y`), and migrates old symlink-based installs automatically.
+  `--clean` removes files dropped from the repo. New tracked files are picked up on the next
+  `install.sh` run without any manual wiring.
+
+## Architecture
+
+```mermaid
+graph TD
+    subgraph Remote [GitHub]
+        Origin[Your Fork<br><code>origin</code>]
+        Upstream[Original Repo<br><code>upstream</code>]
+    end
+
+    subgraph Local [Local Machine]
+        Repo[Local Repository<br><code>~/.dotfiles</code>]
+        Home[Home Directory<br><code>$HOME</code>]
+
+        Repo -- "<b>install.sh</b><br>Copy tracked files" --> Home
+        Home -- "<b>import.sh</b><br>Bring your edits back" --> Repo
+        Repo -- "<b>update.sh</b><br>Apply upstream changes" --> Home
+    end
+
+    Origin ==> |"git clone\ngit pull"| Repo
+    Repo -. "git push" .-> Origin
+    Upstream -. "update.sh --upstream" .-> Repo
+
+    style Repo fill:#f9f2f4,stroke:#d04437
+    style Home fill:#e8f4f8,stroke:#128c7e
+```
+
+| Script       | Purpose                                          |
+| ------------ | ------------------------------------------------ |
+| `install.sh` | Copy tracked files from the repo into `$HOME`    |
+| `import.sh`  | Bring edits made in `$HOME` back into the repo   |
+| `update.sh`  | Pull the latest commits and re-copy into `$HOME` |
 
 ## Directory structure
 
@@ -52,7 +105,12 @@ Designed to be **forked and customised** — see [Workflows](#workflows) below.
 ├── .claude/                  # Claude Code settings and custom skills
 ├── .local/bin/               # WSL helper scripts
 ├── docs/
-│   └── Ubuntu-26.04-devcli.user-data  # cloud-init user-data for WSL setup
+│   ├── Ubuntu-26.04-devcli.user-data  # cloud-init user-data for WSL setup
+│   ├── windows-setup.md               # Finishing the Windows setup (manual)
+│   └── ubuntu-pro-for-wsl.md          # Ubuntu Pro for WSL setup (optional)
+├── windows/
+│   ├── setup.ps1             # Windows 11 base setup script
+│   └── packages.csv          # winget package list for setup.ps1
 ├── lib.sh                    # Shared helpers (sourced by the scripts below)
 ├── install.sh                # Copy repo files into $HOME
 ├── update.sh                 # Pull latest + re-copy (respects local edits)
@@ -66,7 +124,46 @@ Designed to be **forked and customised** — see [Workflows](#workflows) below.
 - **starship**, **mise**, **tmux**, **vim**, **fzf** (optional; all provisioned
   by the cloud-init `packages:` list in [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data))
 
-## Install
+## Setup
+
+### Provisioning a fresh WSL machine
+
+Follow these steps in order:
+
+1. **Prepare Windows 11** — run `windows/setup.ps1` (see below)
+2. **(optional) Finish the Windows setup** — font, VS Code, git identity →
+   [docs/windows-setup.md](docs/windows-setup.md)
+3. **(optional) Enable Ubuntu Pro for WSL** →
+   [docs/ubuntu-pro-for-wsl.md](docs/ubuntu-pro-for-wsl.md)
+4. **(optional) Fork this repo and update the two references** →
+   see [Workflows › Fork-based](#fork-based-recommended-for-customisation)
+5. **Start the WSL distro** from PowerShell:
+
+   ```powershell
+   wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
+   ```
+
+   cloud-init picks up
+   [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) automatically,
+   installs packages, clones the repo, and runs `install.sh -y`.
+
+#### Step 1 in detail — Prepare Windows 11
+
+Run [windows/setup.ps1](windows/setup.ps1) on the Windows host. It:
+
+- Enables WSL
+- Installs Windows Terminal, Git for Windows, and VS Code via winget
+  (package list in [windows/packages.csv](windows/packages.csv))
+- Installs the PlemolJP NF console font
+- Places `~\.cloud-init\Ubuntu-26.04-devcli.user-data` so WSL picks it up automatically
+
+```powershell
+# Download and inspect, then run
+irm https://raw.githubusercontent.com/yokarikeri/dotfiles/refs/heads/main/windows/setup.ps1 -OutFile setup.ps1
+powershell -ExecutionPolicy Bypass -File .\setup.ps1
+```
+
+### Installing on an existing machine
 
 ```sh
 git clone https://github.com/yokarikeri/dotfiles.git ~/.dotfiles
@@ -84,15 +181,6 @@ Open a new shell. On first start, missing zsh plugins are cloned automatically.
 
 Re-running `install.sh` is safe — it overwrites managed files and migrates any
 old symlinks to real files.
-
-## Uninstall
-
-```sh
-sh ~/.dotfiles/uninstall.sh
-```
-
-Removes the `~/.dotfiles` repo clone after confirmation. Config files that were
-copied to `$HOME` are **not** touched — your environment keeps working.
 
 ## Usage
 
@@ -127,36 +215,6 @@ mise upgrade                   # upgrade all tools
 
 The global config at `.config/mise/config.toml` contains a commented-out
 catalogue of tools to choose from, along with a quick-reference cheatsheet.
-
-### Fresh WSL provisioning
-
-#### 1. Prepare Windows 11
-
-Run [windows/setup.ps1](windows/setup.ps1) on the Windows host first. It:
-
-- Enables WSL
-- Installs Windows Terminal, Git for Windows, and VS Code via winget
-  (package list in [windows/packages.csv](windows/packages.csv))
-- Installs the PlemolJP NF console font
-- Places `~/.cloud-init/Ubuntu-26.04-devcli.user-data` so WSL picks it up automatically
-
-```powershell
-# Download and inspect, then run
-irm https://raw.githubusercontent.com/yokarikeri/dotfiles/refs/heads/main/windows/setup.ps1 -OutFile setup.ps1
-powershell -ExecutionPolicy Bypass -File .\setup.ps1
-```
-
-#### 2. Start the WSL distro
-
-Pass [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) as cloud-init user-data when
-creating a new WSL instance. It installs packages, clones this repo, and runs
-`install.sh -y` automatically:
-
-```sh
-wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
-```
-
-See [docs/Ubuntu-26.04-devcli.user-data](docs/Ubuntu-26.04-devcli.user-data) for the full setup.
 
 ## Workflows
 
@@ -225,6 +283,25 @@ sh ~/.dotfiles/update.sh
 Files you have edited locally are not overwritten — their diff is shown and
 you can decide whether to apply the upstream changes manually.
 
+## Uninstall
+
+```sh
+sh ~/.dotfiles/uninstall.sh
+```
+
+Removes the `~/.dotfiles` repo clone after confirmation. Config files that were
+copied to `$HOME` are **not** touched — your environment keeps working.
+
 ## Notes
+
+- **WSL PATH**: `appendWindowsPath` is disabled in the WSL config to prevent Windows
+  paths from bloating `$PATH` and slowing down shell completion. A thin wrapper
+  [`.config/zsh/conf.d/12-wsl.zsh`](.config/zsh/conf.d/12-wsl.zsh) provides
+  convenient access to Windows-side tools without the noise. (`WSLENV` is not
+  used — it adds complexity without meaningful benefit in this setup.)
+
+  > [!TIP]
+  > The list of distro names that `wsl --install -d` recognises is at
+  > <https://github.com/microsoft/WSL/blob/master/distributions/DistributionInfo.json>.
 
 - Commit and comment conventions are in `CLAUDE.md`.
