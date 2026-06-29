@@ -33,6 +33,11 @@ if (( $+commands[fzf-preview] )) && ! (( $+commands[fp] )); then
   alias fp='fzf-preview'
 fi
 
+# claude-clip
+if (( $+commands[claude-clip] )) && ! (( $+commands[fcc] )); then
+  alias fcc='claude-clip'
+fi
+
 # ================================
 #  Zsh built-in history alias
 # ================================

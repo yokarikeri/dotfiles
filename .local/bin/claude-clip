@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-# @(#) Copy Claude's entire conversation to clipboard
+# @(#) Browse Claude conversation sessions with fzf and copy the selected one to clipboard
 
 PROJ_DIR="$HOME/.claude/projects/$(printf '%s' "${1:-$PWD}" | sed 's|[/.]|-|g')"
-JSONL="$(ls -t "$PROJ_DIR"/*.jsonl 2>/dev/null | sed -n ${2:-1}p)"
-[ -z "$JSONL" ] && { echo "No session jsonl found under $PROJ_DIR" >&2; exit 1; }
 
-jq -r '
+mapfile -t jsonls < <(ls -t "$PROJ_DIR"/*.jsonl 2>/dev/null)
+[ ${#jsonls[@]} -eq 0 ] && { echo "No session jsonl found under $PROJ_DIR" >&2; exit 1; }
+
+export JQ_PROG='
   if .type == "user"
     and (.isMeta != true)
     and (.message.content | type) == "string"
@@ -22,4 +23,35 @@ jq -r '
         "\n█ tool_use: Bash\n\n```sh\n# " + (.input.description // "") + "\n" + (.input.command // "") + "\n```\n"
       else empty end
   else empty end
-' "$JSONL" | clip.exe
+'
+
+# Build fzf input: "<path>\t<date>  <first prompt>"
+list() {
+  for f in "${jsonls[@]}"; do
+    dt=$(date -r "$f" '+%m-%d %a %H:%M')
+    prompt=$(jq -r '
+      select(
+        .type == "user"
+        and (.isMeta != true)
+        and (.message.content | type) == "string"
+        and (.message.content | test("^<(command-|bash-|local-command-)") | not)
+      ) | .message.content
+    ' "$f" 2>/dev/null | grep -vE '^[[:space:]]*$' | head -n1 | cut -c1-80)
+    printf '%s\t%s  %s\n' "$f" "$dt" "${prompt:-(no prompt)}"
+  done
+}
+
+export FZF_DEFAULT_OPTS="--height 100% --min-height 10 --border --margin 1 --padding 1 \
+  --prompt '❯ ' --pointer '▐' \
+  --color 'hl:underline,hl+:underline:reverse,pointer:76,prompt:76' \
+  --info hidden --reverse --no-sort --exact"
+
+list | fzf \
+  --delimiter $'\t' \
+  --with-nth '2..' \
+  --preview 'jq -r "$JQ_PROG" {1} | batcat --language markdown --style plain --color always' \
+  --preview-window '+{2}/2' \
+  --border-label '╢ claude sessions ╟' \
+  --footer $'enter:copy  esc:quit' \
+  --bind 'enter:execute-silent(jq -r "$JQ_PROG" {1} | clip.exe && tput bel >/dev/tty)' \
+  || true
