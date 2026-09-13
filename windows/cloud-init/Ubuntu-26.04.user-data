@@ -1,11 +1,16 @@
 #cloud-config
-# Ubuntu-26.04-systemd.user-data: Systemd enabled environment with Docker CE.
+# Ubuntu-26.04.user-data: Systemd enabled environment with Docker CE.
 # ref. https://documentation.ubuntu.com/wsl/latest/
 # ref. https://docs.cloud-init.io/en/latest/reference/datasources/wsl.html
 
-# Ubuntu-26.04
-# wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-systemd
-# wsl --unregister Ubuntu-26.04-systemd
+# Install
+# wsl --install Ubuntu-26.04
+# wsl -d Ubuntu-26.04 -u root -e bash -c "echo wsl-user:$(openssl rand -base64 12) | chpasswd && passwd -d wsl-user && chage -d 0 wsl-user"
+# wsl -d Ubuntu-26.04 passwd
+# wsl --set-default Ubuntu-26.04
+
+# Uninstall
+# wsl --unregister Ubuntu-26.04
 
 timezone: Asia/Tokyo
 locale: ja_JP.UTF-8
@@ -16,8 +21,6 @@ users:
     # System Groups: https://wiki.debian.org/SystemGroups
     groups: [users, sudo, adm] # netdev, audio, plugdev
     shell: /usr/bin/zsh
-    lock_passwd: true
-    # sudo: "ALL=(ALL) NOPASSWD:ALL"
 
 apt:
   sources:
@@ -123,15 +126,14 @@ write_files:
       systemd = true
 
       [interop]
-      # For fast startup
       appendWindowsPath = false
-      #enabled = true
+      enabled = true
 
       [user]
       default = wsl-user
 
       [network]
-      hostname = u26w-systemd
+      hostname = u26w
       #generateHosts = true
       #generateResolvConf = true
 
@@ -175,21 +177,13 @@ runcmd:
   # https://documentation.ubuntu.com/wsl/stable/explanation/security-overview/#disable-root-login
   - sed -i 's/^root.*$/root:x:0:0:root:\/root:\/usr\/sbin\/nologin/' /etc/passwd
 
-  # Requires a password change upon initial login
-  - passwd -d wsl-user
-  - chage -d 0 wsl-user
-
   # dotfiles
   # Fork this repo on GitHub and replace the URL below with your fork's URL.
-  - sudo -u wsl-user git clone https://github.com/yokarikeri/dotfiles.git "$HOME/.dotfiles"
-  - sudo -u wsl-user sh "$HOME/.dotfiles/install.sh" -y
+  - sudo -u wsl-user git clone https://github.com/yokarikeri/dotfiles.git /home/wsl-user/.dotfiles
+  - sudo -u wsl-user sh /home/wsl-user/.dotfiles/install.sh -y
 
   # editor: Nano -> Vim
   - update-alternatives --set editor /usr/bin/vim.basic
-
-  # Claude Code
-  # https://code.claude.com/docs/en/quickstart
-  - sudo -u wsl-user bash -c "curl -fsSL https://claude.ai/install.sh | bash"
 
   # Docker CE
   # https://docs.docker.com/engine/install/ubuntu/
@@ -208,3 +202,15 @@ runcmd:
   - apt-get update
   - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   - usermod -aG docker wsl-user
+
+  # Claude Code
+  # https://code.claude.com/docs/en/quickstart
+  #- sudo -u wsl-user bash -c "curl -fsSL https://claude.ai/install.sh | bash"
+
+  # Antigravity CLI
+  # https://antigravity.google/download?os=linux#antigravity-cli
+  #- sudo -u wsl-user bash -c "curl -fsSL https://antigravity.google/cli/install.sh | bash"
+
+  # Codex CLI
+  # https://learn.chatgpt.com/docs/codex/cli
+  #- sudo -u wsl-user bash -c "curl -fsSL https://chatgpt.com/codex/install.sh | sh"

@@ -1,10 +1,12 @@
 #cloud-config
-# Ubuntu-26.04-devcli.userdata: A daily-use environment with Systemd disabled.
+# Ubuntu-26.04-devcli.user-data: Ubuntu instance without systemd.
 # ref. https://documentation.ubuntu.com/wsl/latest/
 # ref. https://docs.cloud-init.io/en/latest/reference/datasources/wsl.html
 
-# Ubuntu-26.04
+# Install
 # wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
+
+# Uninstall
 # wsl --unregister Ubuntu-26.04-devcli
 
 timezone: Asia/Tokyo
@@ -18,6 +20,9 @@ users:
     shell: /usr/bin/zsh
     lock_passwd: true
     # sudo: "ALL=(ALL) NOPASSWD:ALL"
+
+chpasswd:
+  expire: true
 
 apt:
   sources:
@@ -120,13 +125,11 @@ write_files:
       # ref. https://documentation.ubuntu.com/wsl/stable/reference/instance_configuration/
 
       [boot]
-      # For fast startup
       systemd = false
 
       [interop]
-      # For fast startup
       appendWindowsPath = false
-      #enabled = true
+      enabled = true
 
       [user]
       default = wsl-user
@@ -182,12 +185,8 @@ runcmd:
 
   # dotfiles
   # Fork this repo on GitHub and replace the URL below with your fork's URL.
-  - sudo -u wsl-user git clone https://github.com/yokarikeri/dotfiles.git "$HOME/.dotfiles"
-  - sudo -u wsl-user sh "$HOME/.dotfiles/install.sh" -y
+  - sudo -u wsl-user git clone https://github.com/yokarikeri/dotfiles.git /home/wsl-user/.dotfiles
+  - sudo -u wsl-user sh /home/wsl-user/.dotfiles/install.sh -y
 
   # editor: Nano -> Vim
   - update-alternatives --set editor /usr/bin/vim.basic
-
-  # Claude Code
-  # https://code.claude.com/docs/en/quickstart
-  - sudo -u wsl-user bash -c "curl -fsSL https://claude.ai/install.sh | bash"

@@ -179,8 +179,8 @@ Write-Step '4/4' 'Placing cloud-init user-data...'
 # Each filename must match the WSL instance name passed to --name.
 $cloudInitDir   = Join-Path $env:USERPROFILE '.cloud-init'
 $userDataNames  = @(
+    'Ubuntu-26.04.user-data'
     'Ubuntu-26.04-devcli.user-data'
-    'Ubuntu-26.04-systemd.user-data'
 )
 
 if (-not (Test-Path $cloudInitDir)) { New-Item $cloudInitDir -ItemType Directory | Out-Null }
@@ -212,15 +212,16 @@ Next steps
   - Windows Terminal: set font to "PlemolJP Console NF" in profile settings
 
 (Optional) Fork the dotfiles repo and replace the clone URL in
-  $USERPROFILE\.cloud-init\Ubuntu-26.04-devcli.user-data (line ~185)
+  $USERPROFILE\.cloud-init\Ubuntu-26.04.user-data (line ~182)
+  and Ubuntu-26.04-devcli.user-data (line ~188)
   with your fork's URL so the WSL distro pulls your own config.
 
 Start a WSL distro (run in PowerShell or Windows Terminal):
-  # systemd disabled (daily-use, fast startup)
-  wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
+  # main (systemd enabled, Docker CE, localectl)
+  wsl --install Ubuntu-26.04
 
-  # systemd enabled (Docker CE, localectl)
-  wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-systemd
+  # optional secondary instance (systemd disabled, daily-use, fast startup)
+  wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
 
 A reboot is recommended to fully apply WSL and font changes.
 '@
