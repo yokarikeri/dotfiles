@@ -14,12 +14,32 @@ typeset -g ZSH_PLUGINS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins"
 # Ensure a plugin directory exists; clone it if not.
 # Sets REPLY to the plugin's local directory path.
 # Returns 0 on success, non-zero if the clone fails.
+#
+# Several shells can start at once on first launch (e.g. tmux panes), so the
+# clone is serialized with a lock and staged in a temp dir to avoid exposing
+# a half-cloned plugin.
 function _zsh_plugin_dir {
   local name=$1 url=$2
   REPLY="$ZSH_PLUGINS_DIR/$name"
   [[ -d "$REPLY" ]] && return 0
-  print -P "%F{cyan}-- installing zsh plugin: ${name} --%f"
-  command git clone --depth 1 --quiet -- "$url" "$REPLY"
+
+  local lockfile="$ZSH_PLUGINS_DIR/.${name}.lock" lockfd
+  # zsystem flock does not create the lock file itself.
+  : >>! "$lockfile" 2>/dev/null
+  zmodload -F zsh/system +b:zsystem 2>/dev/null &&
+    zsystem flock -f lockfd "$lockfile" 2>/dev/null
+
+  if [[ ! -d "$REPLY" ]]; then
+    print -P "%F{cyan}-- installing zsh plugin: ${name} --%f"
+    local tmp="$REPLY.tmp.$$"
+    # -T keeps mv from nesting tmp inside $REPLY if another shell won the race.
+    command git clone --depth 1 --quiet -- "$url" "$tmp" &&
+      command mv -T -- "$tmp" "$REPLY" 2>/dev/null
+    [[ -e "$tmp" ]] && command rm -rf -- "$tmp"
+  fi
+
+  [[ -n $lockfd ]] && exec {lockfd}>&-
+  [[ -d "$REPLY" ]]
 }
 
 # Ensure a plugin directory exists, then source its entry file.
