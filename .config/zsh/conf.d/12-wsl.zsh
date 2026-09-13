@@ -13,13 +13,32 @@ grep -qx enabled /proc/sys/fs/binfmt_misc/WSLInterop 2>/dev/null || return
 #  Export major Windows environment variables
 # ================================
 
-export USERPROFILE="$(get_win_env_path USERPROFILE)"             # C:\Users\<username>
-export APPDATA="$(get_win_env_path APPDATA)"                     # C:\Users\<username>\AppData\Roaming
-export ProgramData="$(get_win_env_path ProgramData)"             # C:\ProgramData
-export ProgramFiles="$(get_win_env_path ProgramFiles)"           # C:\Program Files
-export ProgramFilesX86="$(get_win_env_path 'ProgramFiles(x86)')" # C:\Program Files (x86)
-export systemroot="$(get_win_env_path SystemRoot)"               # C:\WINDOWS
-export LOCALAPPDATA="$(get_win_env_path LOCALAPPDATA)"           # C:\Users\<username>\AppData\Local
+# Each lookup round-trips through wslvar+wslpath (~450ms for all 7 combined),
+# and every new shell pays this cost since it isn't a login shell — cache the
+# resolved values for the life of the WSL instance instead. This matters a lot
+# for AI agents (e.g. Claude Code), which spawn a fresh shell per command.
+local -r _win_env_cache="/tmp/zsh_win_env_${USER}"
+if [[ -r "$_win_env_cache" ]]; then
+  source "$_win_env_cache"
+else
+  export USERPROFILE="$(get_win_env_path USERPROFILE)"             # C:\Users\<username>
+  export APPDATA="$(get_win_env_path APPDATA)"                     # C:\Users\<username>\AppData\Roaming
+  export ProgramData="$(get_win_env_path ProgramData)"             # C:\ProgramData
+  export ProgramFiles="$(get_win_env_path ProgramFiles)"           # C:\Program Files
+  export ProgramFilesX86="$(get_win_env_path 'ProgramFiles(x86)')" # C:\Program Files (x86)
+  export systemroot="$(get_win_env_path SystemRoot)"               # C:\WINDOWS
+  export LOCALAPPDATA="$(get_win_env_path LOCALAPPDATA)"           # C:\Users\<username>\AppData\Local
+
+  {
+    print -r -- "export USERPROFILE=${(qq)USERPROFILE}"
+    print -r -- "export APPDATA=${(qq)APPDATA}"
+    print -r -- "export ProgramData=${(qq)ProgramData}"
+    print -r -- "export ProgramFiles=${(qq)ProgramFiles}"
+    print -r -- "export ProgramFilesX86=${(qq)ProgramFilesX86}"
+    print -r -- "export systemroot=${(qq)systemroot}"
+    print -r -- "export LOCALAPPDATA=${(qq)LOCALAPPDATA}"
+  } >! "$_win_env_cache"
+fi
 
 # ================================
 #  Windows executable wrappers
