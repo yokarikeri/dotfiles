@@ -81,11 +81,11 @@ install_before = "7d"
 "aqua:jdx/usage" = "latest" # Used for Mise Completion
 
 ## Runtime
-# "core:node" = "lts"            # cf. mise ls-remote core:node | grep -oP '^\d+' | uniq | awk -F. '$1 % 2 == 0' | tail -n 10
+"core:python" = "latest"         # cf. mise ls-remote core:python | grep -xP '[\d.]+' | grep -oP '^\d+\.\d+' | uniq | tail -n 10
+"aqua:astral-sh/uv" = "latest"
+"core:node" = "lts"              # cf. mise ls-remote core:node | grep -oP '^\d+' | uniq | awk -F. '$1 % 2 == 0' | tail -n 10
 # "npm:pnpm" = "latest"          # cf. mise ls-remote npm:pnpm | grep -xP '[\d.]+' | grep -oP '^\d+' | uniq | tail -n 10
 # "core:bun" = "latest"
-# "core:python" = "latest"       # cf. mise ls-remote core:python | grep -xP '[\d.]+' | grep -oP '^\d+\.\d+' | uniq | tail -n 10
-# "aqua:astral-sh/uv" = "latest"
 
 ## Shell
 # "aqua:junegunn/fzf" = "latest"             # Fuzzy finder
@@ -172,7 +172,7 @@ install_before = "7d"
 # "npm:@google/gemini-cli" = "latest"        # Gemini CLI
 
 ## Cloud
-# "aqua:aws/aws-cli" = "latest"              # AWS CLI v2 (aws)
+# "aqua:aws/aws-cli" = { version = "latest", symlink_bins = true } # AWS CLI v2 (aws)
 # "vfox:mise-plugins/vfox-gcloud" = "latest" # Google Cloud CLI (gcloud)
 # "pipx:azure-cli" = "latest"                # Azure CLI (az)
 # "github:GAM-team/GAM" = "latest"           # command line management for Google Workspace (gam)
