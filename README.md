@@ -60,6 +60,8 @@ graph TD
     subgraph Remote [GitHub]
         Origin[Your Fork<br><code>origin</code>]
         Upstream[Original Repo<br><code>upstream</code>]
+
+        Upstream -- "GitHub Fork button<br>(one-time, on GitHub)" --> Origin
     end
 
     subgraph Local [Local Machine]
