@@ -2,7 +2,6 @@
   "env": {
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1"
   },
-  "language": "japanese",
   "permissions": {
     "deny": [
       "Read(./.env)",
@@ -69,15 +68,16 @@
       "Bash(docker push *)",
       "Bash(kubectl delete *)",
       "Bash(kubectl apply *)",
-      "Bash(terraform apply*)",
       "Bash(terraform destroy*)"
     ],
     "disableBypassPermissionsMode": "disable"
   },
+  "model": "opusplan",
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
+  "language": "japanese",
   "sandbox": {
     "enabled": false,
     "failIfUnavailable": false,
@@ -85,7 +85,12 @@
       "allowAllUnixSockets": true
     }
   },
-  "effortLevel": "medium",
+  "modelSettings": {
+    "claude-sonnet-5": {
+      "effortLevel": "high"
+    }
+  },
   "theme": "dark",
-  "model": "opusplan"
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true
 }
