@@ -43,6 +43,8 @@ packages:
   - manpages-ja-dev # Japanese man pages for developers
 
   # === Shell ===
+  - shellcheck # Shell script linter
+  - shfmt # Shell script formatter
   - starship # Cross-shell prompt
   - tmux # Terminal multiplexer (main)
   - zsh # Z shell (main)
@@ -112,9 +114,9 @@ packages:
   - git-flow # Git extensions for repo operations
 
   # === Document & Clipboard ===
+  - glow # Render markdown on the CLI
   - pandoc # General markup converter
   - xclip # CLI interface to X selections (main)
-  # - glow # Render markdown on the CLI
   # - xsel # CLI program for accessing X clipboard
 
 write_files:

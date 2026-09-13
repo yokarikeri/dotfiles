@@ -41,6 +41,8 @@ packages:
   - manpages-ja-dev # Japanese man pages for developers
 
   # === Shell ===
+  - shellcheck # Shell script linter
+  - shfmt # Shell script formatter
   - starship # Cross-shell prompt
   - tmux # Terminal multiplexer (main)
   - zsh # Z shell (main)
@@ -110,9 +112,9 @@ packages:
   - git-flow # Git extensions for repo operations
 
   # === Document & Clipboard ===
+  - glow # Render markdown on the CLI
   - pandoc # General markup converter
   - xclip # CLI interface to X selections (main)
-  # - glow # Render markdown on the CLI
   # - xsel # CLI program for accessing X clipboard
 
 write_files:
@@ -207,10 +209,10 @@ runcmd:
   # https://code.claude.com/docs/en/quickstart
   #- sudo -u wsl-user bash -c "curl -fsSL https://claude.ai/install.sh | bash"
 
-  # Antigravity CLI
-  # https://antigravity.google/download?os=linux#antigravity-cli
-  #- sudo -u wsl-user bash -c "curl -fsSL https://antigravity.google/cli/install.sh | bash"
-
   # Codex CLI
   # https://learn.chatgpt.com/docs/codex/cli
   #- sudo -u wsl-user bash -c "curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+
+  # Antigravity CLI
+  # https://antigravity.google/download?os=linux#antigravity-cli
+  #- sudo -u wsl-user bash -c "curl -fsSL https://antigravity.google/cli/install.sh | bash"

@@ -81,9 +81,9 @@ install_before = "7d"
 "aqua:jdx/usage" = "latest" # Used for Mise Completion
 
 ## Runtime
-"core:python" = "latest"         # cf. mise ls-remote core:python | grep -xP '[\d.]+' | grep -oP '^\d+\.\d+' | uniq | tail -n 10
-"aqua:astral-sh/uv" = "latest"
-"core:node" = "lts"              # cf. mise ls-remote core:node | grep -oP '^\d+' | uniq | awk -F. '$1 % 2 == 0' | tail -n 10
+# "core:node" = "lts"              # cf. mise ls-remote core:node | grep -oP '^\d+' | uniq | awk -F. '$1 % 2 == 0' | tail -n 10
+# "core:python" = "latest"         # cf. mise ls-remote core:python | grep -xP '[\d.]+' | grep -oP '^\d+\.\d+' | uniq | tail -n 10
+# "aqua:astral-sh/uv" = "latest"
 # "npm:pnpm" = "latest"          # cf. mise ls-remote npm:pnpm | grep -xP '[\d.]+' | grep -oP '^\d+' | uniq | tail -n 10
 # "core:bun" = "latest"
 
@@ -155,6 +155,8 @@ install_before = "7d"
 # "aqua:TomWright/dasel" = "latest"         # JSON/TOML/YAML/XML/CSV processor
 # "pipx:yamllint" = "latest"                # YAML linter
 # "github:sheeki03/tirith" = "latest"       # Terminal security tool
+# "npm:prettier" = "latest"                 # Prettier is an opinionated code formatter
+# "npm:markdownlint-cli2" = "latest"        # CLI wrapper for the markdownlint
 
 ## Docker
 # "aqua:hadolint/hadolint" = "latest"
@@ -167,9 +169,9 @@ install_before = "7d"
 
 ## LLM
 # Claude Code Official (automatic update): https://code.claude.com/docs/en/setup#install-claude-code
-# "npm:@anthropic-ai/claude-code" = "latest" # Claude Code (npm)
-# "npm:@openai/codex" = "latest"             # Codex CLI
-# "npm:@google/gemini-cli" = "latest"        # Gemini CLI
+# "aqua:anthropics/claude-code" = "latest"                # Claude Code
+# "aqua:openai/codex" = "latest"                          # Codex CLI
+# "aqua:google-antigravity/antigravity-cli" = "latest"    # Gemini CLI
 
 ## Cloud
 # "aqua:aws/aws-cli" = { version = "latest", symlink_bins = true } # AWS CLI v2 (aws)
