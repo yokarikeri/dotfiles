@@ -29,6 +29,13 @@ export PAGER='less'
 export LESS='--ignore-case --jump-target=4 --RAW-CONTROL-CHARS --HILITE-UNREAD'
 export LESSCHARSET='utf-8'
 
+# apt >=2.9 (Ubuntu 26.04+) auto-pipes list/search/show/policy through
+# $PAGER and honors LESS as-is (no forced -F), unlike older apt which
+# printed straight to stdout. Scope -F to apt via APT_PAGER instead of
+# adding it to LESS globally, so short apt output doesn't need a
+# keypress while other pagers keep entering full-screen mode.
+export APT_PAGER='less -FRX'
+
 # Date and time format used by ls/eza and similar tools.
 # Format: YYYY-MM-DD Weekday hh:mm:ss
 export TIME_STYLE='+%F %a %T'
