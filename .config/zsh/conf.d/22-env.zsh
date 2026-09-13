@@ -20,13 +20,13 @@ fi
 export PAGER='less'
 
 # less options:
-#   -i  ignore case in searches that lack uppercase letters
-#   -jn jump-target: show the match n lines from the top
-#   -R  pass ANSI color escape sequences through raw
-#   -W  highlight the first unread line after a forward move
-#   -X  do not send init/de-init strings to the terminal
-#   -F  quit immediately if output fits on one screen
-export LESS='--ignore-case --jump-target=4 --RAW-CONTROL-CHARS --HILITE-UNREAD --no-init --quit-if-one-screen'
+#   -i, --ignore-case           ignore case in searches that lack uppercase letters
+#   -jn, --jump-target=n        jump-target: show the match n lines from the top
+#   -R, --RAW-CONTROL-CHARS     pass ANSI color escape sequences through raw
+#   -W, --HILITE-UNREAD         highlight the first unread line after a forward move
+#   -X, --no-init               do not send init/de-init strings to the terminal
+#   -F, --quit-if-one-screen    quit immediately if output fits on one screen
+export LESS='--ignore-case --jump-target=4 --RAW-CONTROL-CHARS --HILITE-UNREAD'
 export LESSCHARSET='utf-8'
 
 # Date and time format used by ls/eza and similar tools.
