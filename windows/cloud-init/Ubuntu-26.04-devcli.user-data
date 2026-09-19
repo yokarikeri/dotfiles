@@ -37,64 +37,64 @@ package_reboot_if_required: true
 
 # Default packages: https://releases.ubuntu.com/resolute/ubuntu-26.04-wsl-amd64.manifest
 packages:
-  # === WSL & Localization ===
+  # === Localization ===
   - language-pack-ja # Japanese language support (main)
-  - manpages-ja # Japanese man pages
-  - manpages-ja-dev # Japanese man pages for developers
+  - manpages-ja # Japanese man pages (universe)
+  - manpages-ja-dev # Japanese man pages for developers (universe)
 
   # === Shell ===
-  - shellcheck # Shell script linter
-  - shfmt # Shell script formatter
-  - starship # Cross-shell prompt
+  - shellcheck # Shell script linter (universe)
+  - shfmt # Shell script formatter (universe)
+  - starship # Cross-shell prompt (universe)
   - tmux # Terminal multiplexer (main)
   - zsh # Z shell (main)
 
   # === System ===
-  - btop # replaces top / htop
+  - btop # replaces top / htop (universe)
   - bubblewrap # Unprivileged sandboxing tool (main)
   - cloud-image-utils # Cloud image management utilities (main)
   - mise # dev tools, env vars, task runner (ppa)
-  - ncdu # replaces du
-  - pydf # replaces df
+  - ncdu # replaces du (universe)
+  - pydf # replaces df (universe)
 
   # === Editors & Pagers ===
-  - bat # replaces cat
-  - hexyl # replaces hexdump
+  - bat # replaces cat (universe)
+  - hexyl # replaces hexdump (universe)
   - vim # replaces vi (main)
-  # - pspg # Postgres Pager
 
   # === Search & File Utilities ===
-  - eza # replaces ls
-  - fd-find # replaces find
-  - fzf # fuzzy finder
-  - ripgrep # replaces grep
-  - tree # Directory listing program
-  # - ugrep # replaces grep
+  - eza # replaces ls (universe)
+  - fd-find # replaces find (universe)
+  - fzf # fuzzy finder (universe)
+  - ripgrep # replaces grep (universe)
+  - tree # Directory listing program (universe)
+  # - ugrep # replaces grep (universe/utils)
 
   # === Text & Data Processing ===
-  - colordiff # replaces diff
-  - crudini # INI file utility
-  - csvkit # CSV file utility
-  - gron # Make JSON greppable
-  - highlight # Source code to formatted text converter
-  - jc # JSON Convert
+  - colordiff # replaces diff (universe)
+  - crudini # INI file utility (universe)
+  - csvkit # CSV file utility (universe)
+  - gron # Make JSON greppable (universe)
+  - highlight # Source code to formatted text converter (universe)
+  - jc # JSON Convert (universe)
   - jq # JSON Query (main)
-  - xmlstarlet # XML toolkit
-  - yamllint # YAML linter
-  - yq # YAML processor
-  # - dasel # Data-Selector for JSON/YAML/TOML/XML/CSV/etc
-  # - miller # Data processing tool for CSV/JSON/etc
-  # - visidata # Terminal spreadsheet multitasker
-  # - xq # XML and HTML processor
+  - pandoc # General markup converter (universe)
+  - xmlstarlet # XML toolkit (universe)
+  - yamllint # YAML linter (universe)
+  - yq # YAML processor (universe)
+  # - dasel # Data-Selector for JSON/YAML/TOML/XML/CSV/etc (universe)
+  # - miller # Data processing tool for CSV/JSON/etc (universe)
+  # - visidata # Terminal spreadsheet multitasker (universe)
+  # - xq # XML and HTML processor (universe)
 
   # === Encoding & Line Endings ===
-  - dos2unix # DOS/Mac to UNIX format converter
-  - nkf # Network Kanji Filter
-  - uchardet # Encoding detector
+  - nkf # Network Kanji Filter (universe)
+  - uchardet # Encoding detector (main)
+  # - dos2unix # DOS/Mac to UNIX format converter (universe)
 
   # === Archiving & Compression ===
-  - 7zip # File archiver
-  - libarchive-tools # bsdtar, bsdcpio and bsdcat
+  - 7zip # File archiver (universe)
+  - libarchive-tools # bsdtar, bsdcpio and bsdcat (universe)
   - tar # GNU tar archiving utility (main)
   - unzip # De-archiver for .zip files (main)
   - zip # Archiver for .zip files (main)
@@ -107,17 +107,35 @@ packages:
   - openssh-client # Secure shell client (main)
   - socat # SOcket CAT (main)
   - wget # retrieves files from the web (main)
+  - whois # WHOIS client (main)
+  # - httpie # API testing client (universe)
+  # - s-nail # Mail client (universe)
 
-  # === Version Control & Diff ===
+  # === Version Control ===
   - git # Distributed version control system (ppa)
-  - git-delta # Syntax-highlighting pager for git
-  - git-flow # Git extensions for repo operations
+  - git-delta # Syntax-highlighting pager for git (universe)
+  - git-flow # Git extensions for repo operations (universe)
 
-  # === Document & Clipboard ===
-  - glow # Render markdown on the CLI
-  - pandoc # General markup converter
+  # === X11 ===
   - xclip # CLI interface to X selections (main)
-  # - xsel # CLI program for accessing X clipboard
+  # - xsel # CLI program for accessing X clipboard (universe)
+
+  # === Database Clients ===
+  # - postgresql-client # PostgreSQL command-line client (main)
+  # - pgcli # PostgreSQL client with autocompletion and syntax highlighting (universe)
+  # - pspg # Pager for tabular query output (universe)
+  # - mysql-client # MySQL command-line client (main)
+  # - mariadb-client # MariaDB command-line client (main)
+  # - mycli # MySQL/MariaDB client with autocompletion and syntax highlighting (universe)
+  # - sqlite3 # SQLite command-line client (main)
+  # - litecli # SQLite client with autocompletion and syntax highlighting (universe)
+
+  # === Network Filesystems & File Transfer ===
+  # - smbclient # SMB/CIFS client (main)
+  # - nfs-common # NFS client utilities (main)
+  # - rsync # Fast incremental file transfer (main)
+  # - lftp # Sophisticated file transfer client, FTP/SFTP/HTTP/etc (main)
+  # - rclone # Cloud storage sync tool, "rsync for cloud" (universe)
 
 write_files:
   - path: /etc/wsl.conf
