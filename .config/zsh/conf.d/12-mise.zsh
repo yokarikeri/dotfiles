@@ -5,4 +5,5 @@
 
 (( ${+commands[mise]} )) || return
 
+export MISE_CEILING_PATHS="$HOME/.dotfiles"
 eval "$(mise activate zsh)"
