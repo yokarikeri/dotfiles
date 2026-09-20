@@ -86,6 +86,7 @@ install_before = "7d"
 # "aqua:astral-sh/uv" = "latest"
 # "npm:pnpm" = "latest"          # cf. mise ls-remote npm:pnpm | grep -xP '[\d.]+' | grep -oP '^\d+' | uniq | tail -n 10
 # "core:bun" = "latest"
+# "github:aquaproj/aqua" = "latest"
 
 ## Shell
 # "aqua:junegunn/fzf" = "latest"             # Fuzzy finder
@@ -167,17 +168,17 @@ install_before = "7d"
 # "aqua:wagoodman/dive" = "latest"
 # "aqua:bcicen/ctop" = "latest"
 
-## LLM
-# Claude Code Official (automatic update): https://code.claude.com/docs/en/setup#install-claude-code
+## Coding Agent
 # "aqua:anthropics/claude-code" = "latest"                # Claude Code
 # "aqua:openai/codex" = "latest"                          # Codex CLI
 # "aqua:google-antigravity/antigravity-cli" = "latest"    # Gemini CLI
+# "aqua:github/copilot-cli" = "latest"                    # GitHub Copilot CLI
 
 ## Cloud
 # "aqua:aws/aws-cli" = { version = "latest", symlink_bins = true } # AWS CLI v2 (aws)
-# "vfox:mise-plugins/vfox-gcloud" = "latest" # Google Cloud CLI (gcloud)
-# "pipx:azure-cli" = "latest"                # Azure CLI (az)
-# "github:GAM-team/GAM" = "latest"           # command line management for Google Workspace (gam)
+# "vfox:mise-plugins/vfox-gcloud" = "latest"                       # Google Cloud CLI (gcloud)
+# "pipx:azure-cli" = "latest"                                      # Azure CLI (az)
+# "github:GAM-team/GAM" = "latest"                                 # command line management for Google Workspace (gam)
 
 # --------------------------------
 # [env]
