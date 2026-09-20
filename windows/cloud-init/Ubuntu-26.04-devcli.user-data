@@ -24,6 +24,9 @@ users:
 chpasswd:
   expire: true
 
+ssh_deletekeys: true
+ssh_genkeytypes: [ed25519]
+
 apt:
   sources:
     git-core-ppa:

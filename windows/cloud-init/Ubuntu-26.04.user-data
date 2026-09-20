@@ -5,8 +5,6 @@
 
 # Install
 # wsl --install Ubuntu-26.04
-# wsl -d Ubuntu-26.04 -u root -e bash -c "echo wsl-user:$(openssl rand -base64 12) | chpasswd && passwd -d wsl-user && chage -d 0 wsl-user"
-# wsl -d Ubuntu-26.04 passwd
 # wsl --set-default Ubuntu-26.04
 
 # Uninstall
@@ -21,6 +19,10 @@ users:
     # System Groups: https://wiki.debian.org/SystemGroups
     groups: [users, sudo, adm] # netdev, audio, plugdev
     shell: /usr/bin/zsh
+    sudo: ALL=(ALL) NOPASSWD:ALL
+
+ssh_deletekeys: true
+ssh_genkeytypes: [ed25519]
 
 apt:
   sources:
@@ -234,3 +236,7 @@ runcmd:
   # Antigravity CLI
   # https://antigravity.google/download?os=linux#antigravity-cli
   #- sudo -u wsl-user bash -c "curl -fsSL https://antigravity.google/cli/install.sh | bash"
+
+  # GitHub Copilot CLI
+  # https://github.com/features/copilot/cli
+  #- sudo -u wsl-user bash -c "curl -fsSL https://gh.io/copilot-install | bash"
