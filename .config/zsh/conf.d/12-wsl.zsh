@@ -56,12 +56,21 @@ fi
 # $1: path to the Windows executable
 # $2: (optional) wrapper command name; defaults to the target filename
 #
-# Skips if the target does not exist or the wrapper already exists.
+# Prints an error to stderr and returns 1 if the target does not exist or is
+# not executable. Silently skips if the wrapper already exists.
 function gen_win_wrapper {
   local -r target_path="$1"
   local -r cmd_name="${2:-${target_path:t}}"
   local -r wrapper_path="${XDG_BIN_HOME:-$HOME/.local/bin}/$cmd_name"
-  [[ ! -f "$target_path" ]] || [[ -f "$wrapper_path" ]] && return
+  if [[ ! -f "$target_path" ]]; then
+    print -u2 "gen_win_wrapper: target not found: $target_path"
+    return 1
+  fi
+  if [[ ! -x "$target_path" ]]; then
+    print -u2 "gen_win_wrapper: target is not executable: $target_path"
+    return 1
+  fi
+  [[ -f "$wrapper_path" ]] && return
   echo '#!/bin/sh' > "$wrapper_path"
   echo "exec \"$target_path\" \"\$@\"" >> "$wrapper_path"
   chmod +x "$wrapper_path"
@@ -77,7 +86,7 @@ gen_win_wrapper "$LOCALAPPDATA/Programs/Microsoft VS Code/bin/code"
 # gen_win_wrapper "$systemroot/regedit.exe"
 # gen_win_wrapper "$systemroot/System32/cmd.exe"
 # gen_win_wrapper "$systemroot/System32/WindowsPowerShell/v1.0/powershell.exe"
-# gen_win_wrapper "$ProgramFiles/PowerShell/7/pwsh.exe"
+# gen_win_wrapper "$ProgramFiles/PowerShell/7/pwsh.exe" # %ProgramFiles%\WindowsApps cannot be used because it lacks execution permissions
 
 # # Generate wrappers for all .exe files under a directory:
 # #   (N) = null glob (skip missing paths)
