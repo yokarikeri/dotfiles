@@ -1,12 +1,14 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 # setup.ps1 — Windows 11 base setup for the WSL dev environment.
 #
 # What this script does:
 #   1. Enables WSL (feature only; distro is installed separately)
 #   2. Installs winget packages defined in packages.csv
-#   3. Installs PlemolJP NF console font
-#   4. Places cloud-init user-data for the WSL distro
-#   5. Prints next-step instructions
+#   3. Places cloud-init user-data for the WSL distro
+#   4. Prints next-step instructions
+#
+# Nerd Fonts are not installed here: install-nerd-font.ps1 handles them, and
+# it must run as a regular user (see the next steps this script prints).
 #
 # Usage (run in PowerShell as a regular user — the script self-elevates):
 #   powershell -ExecutionPolicy Bypass -File .\setup.ps1
@@ -15,9 +17,11 @@
 
 # --- Fork customisation point ---
 $RepoBase   = 'https://raw.githubusercontent.com/yokarikeri/dotfiles/refs/heads/main'
-$FontVersion = 'v3.0.0'
 
 $ErrorActionPreference = 'Stop'
+# Windows PowerShell 5.1 redraws the progress bar per chunk, which makes
+# Invoke-WebRequest / Expand-Archive many times slower.
+$ProgressPreference = 'SilentlyContinue'
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -27,11 +31,19 @@ function Write-Ok    ($msg)     { Write-Host "  [OK] $msg" -ForegroundColor Gree
 function Write-Skip  ($msg)     { Write-Host "  [--] $msg" -ForegroundColor DarkGray }
 function Write-Warn  ($msg)     { Write-Host "  [!!] $msg" -ForegroundColor Cyan }
 function Write-Fail  ($msg)     { Write-Host "  [EE] $msg" -ForegroundColor Red }
+function Wait-Enter { Read-Host "`nPress Enter to close this window" | Out-Null }
+
+# The elevated window closes on exit, so keep it open on errors too.
+trap {
+    Write-Fail $_
+    Wait-Enter
+    exit 1
+}
 
 # ---------------------------------------------------------------------------
 # Step 0: Self-elevate to administrator
 #
-# wsl --install and HKLM font registration both require admin rights.
+# wsl --install requires admin rights.
 
 $identity  = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal($identity)
@@ -49,7 +61,7 @@ Write-Host "  Repo: $RepoBase"
 # ---------------------------------------------------------------------------
 # Step 1: Enable WSL
 
-Write-Step '1/4' 'Enabling WSL...'
+Write-Step '1/3' 'Enabling WSL...'
 
 # --no-distribution installs the WSL feature only; the distro is started
 # manually in the last step so the user can choose a name.
@@ -63,7 +75,7 @@ if ($LASTEXITCODE -eq 0) {
 # ---------------------------------------------------------------------------
 # Step 2: Install winget packages
 
-Write-Step '2/4' 'Installing packages via winget...'
+Write-Step '2/3' 'Installing packages via winget...'
 
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     Write-Warn 'winget not found — skipping package installation.'
@@ -120,61 +132,9 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
 }
 
 # ---------------------------------------------------------------------------
-# Step 3: Install PlemolJP NF font
+# Step 3: Place cloud-init user-data
 
-Write-Step '3/4' 'Installing PlemolJP NF font...'
-
-$fontUrl     = "https://github.com/yuru7/PlemolJP/releases/download/$FontVersion/PlemolJP_NF_$FontVersion.zip"
-$tempZip     = "$env:TEMP\PlemolJP_NF.zip"
-$tempExtract = "$env:TEMP\PlemolJP_NF"
-$fontsFolder = [Environment]::GetFolderPath('Fonts')
-$fontRegPath = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts'
-
-Write-Host '  Downloading font archive...'
-Invoke-WebRequest -Uri $fontUrl -OutFile $tempZip -UseBasicParsing
-
-Write-Host '  Extracting...'
-if (Test-Path $tempExtract) { Remove-Item $tempExtract -Recurse -Force }
-Expand-Archive -Path $tempZip -DestinationPath $tempExtract -Force
-
-# Remove existing PlemolJP entries so a clean re-install works.
-Write-Host '  Removing existing PlemolJP fonts...'
-$existing = Get-ItemProperty -Path $fontRegPath |
-    Get-Member -MemberType NoteProperty |
-    Where-Object { $_.Name -match 'PlemolJP' }
-
-foreach ($entry in $existing) {
-    $fileName = Get-ItemPropertyValue -Path $fontRegPath -Name $entry.Name
-    Remove-ItemProperty -Path $fontRegPath -Name $entry.Name -Force -ErrorAction SilentlyContinue
-    $filePath = Join-Path $fontsFolder $fileName
-    if (Test-Path $filePath) {
-        # Font files in use cannot be deleted; SilentlyContinue lets us proceed.
-        Remove-Item $filePath -Force -ErrorAction SilentlyContinue
-    }
-}
-
-Write-Host '  Installing new fonts...'
-$fontDir   = Join-Path $tempExtract "PlemolJP_NF_$FontVersion"
-$fontFiles = Get-ChildItem $fontDir -Recurse -Include '*.ttf', '*.otf'
-
-$shell       = New-Object -ComObject Shell.Application
-$shellFonts  = $shell.Namespace(0x14)   # 0x14 = special Fonts folder
-
-foreach ($file in $fontFiles) {
-    $dest = Join-Path $fontsFolder $file.Name
-    if (Test-Path $dest) { Remove-Item $dest -Force -ErrorAction SilentlyContinue }
-    $shellFonts.CopyHere($file.FullName, 16)   # 16 = "Yes to All"
-}
-
-Remove-Item $tempZip     -Force
-Remove-Item $tempExtract -Recurse -Force
-
-Write-Ok 'PlemolJP NF installed.'
-
-# ---------------------------------------------------------------------------
-# Step 4: Place cloud-init user-data
-
-Write-Step '4/4' 'Placing cloud-init user-data...'
+Write-Step '3/3' 'Placing cloud-init user-data...'
 
 # Each filename must match the WSL instance name passed to --name.
 $cloudInitDir   = Join-Path $env:USERPROFILE '.cloud-init'
@@ -205,11 +165,21 @@ Write-Host @'
 
 Next steps
 ----------
+Install a Nerd Font (required)
+  The prompt and CLI tools in this environment draw glyphs that only a
+  Nerd Font provides, so pick one of:
+  - install PlemolJP Console NF with the bundled script, as a REGULAR user
+    (not elevated, so it installs for your account only):
+      powershell -ExecutionPolicy Bypass -File .\install-nerd-font.ps1
+      powershell -ExecutionPolicy Bypass -File .\install-nerd-font.ps1 -List
+    (not next to setup.ps1? get it from windows/install-nerd-font.ps1 in the repo)
+  - or install any Nerd Font of your choice yourself.
+  Then set it as the font in your Windows Terminal / VS Code profile.
+
 (Optional) Finish Windows settings manually:
   - Git Bash: git config --global user.name  "Your Name"
               git config --global user.email "you@example.com"
   - VS Code: install the "Remote Development" extension pack
-  - Windows Terminal: set font to "PlemolJP Console NF" in profile settings
 
 (Optional) Fork the dotfiles repo and replace the clone URL in
   $USERPROFILE\.cloud-init\Ubuntu-26.04.user-data (line ~182)
@@ -223,5 +193,7 @@ Start a WSL distro (run in PowerShell or Windows Terminal):
   # optional secondary instance (systemd disabled, daily-use, fast startup)
   wsl --install -d Ubuntu-26.04 --name Ubuntu-26.04-devcli
 
-A reboot is recommended to fully apply WSL and font changes.
+A reboot is recommended to fully apply the WSL changes.
 '@
+
+Wait-Enter

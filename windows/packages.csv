@@ -1,7 +1,13 @@
 Name,Id,Source,Override
 Windows Terminal,9N0DX20HK701,msstore,
-Git for Windows,Git.Git,winget,"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /COMPONENTS=icons,ext,ext\reg\shellhere,ext\reg\guihere,assoc,assoc_sh"
+# Git for Windows: https://gitforwindows.org/silent-or-unattended-installation.html
+Git for Windows,Git.Git,winget,"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /COMPONENTS=icons,ext,ext\reg\shellhere,gitlfs,assoc,assoc_sh,autoupdate,windowsterminal,scala /EditorOption=VisualStudioCode /CurlOption=WinSSL /CRLFOption=CRLFCommitAsIs /DefaultBranchOption=main"
+GitHub CLI,GitHub.cli,winget,
 VS Code,Microsoft.VisualStudioCode,winget,"/mergetasks=!runcode,addcontextmenufiles,addcontextmenufolders"
-# PowerShell 7,9MZ1SNWT0N5D,msstore,
 # 7-Zip,7zip.7zip,winget,
 # Google Chrome,Google.Chrome,winget,
+# PowerShell 7,Microsoft.PowerShell,winget,
+# PowerToys,Microsoft.PowerToys,winget,
+# WinMerge,WinMerge.WinMerge,winget,
+# Slack,SlackTechnologies.Slack,winget,
+# Notion,Notion.Notion,winget,
