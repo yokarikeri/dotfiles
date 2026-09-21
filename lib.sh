@@ -71,37 +71,46 @@ _get_userprofile() {
 
 STARSHIP_PLACEHOLDER='/mnt/c/Users/username'
 
-# Copy repo's starship.toml to $1, applying USERPROFILE substitution and compat patch.
+# Repo's starship.toml targets Starship v1.22.1 (Ubuntu 26.04 universe).
+# Newer versions get the extra module sections from this patch.
+STARSHIP_UPGRADE_PATCH_VERSION='1.23.0'
+
+# Print the patch file for the installed starship, or nothing when the
+# installed version needs no patch (or starship is not installed).
+_starship_patch_for_installed_version() {
+  local _ver=""
+  command -v starship > /dev/null 2>&1 && \
+    _ver="$(starship --version 2>/dev/null </dev/null | awk 'NR==1{print $2}')" || true
+  [ -n "$_ver" ] || return 0
+  version_lt "$_ver" "$STARSHIP_UPGRADE_PATCH_VERSION" && return 0
+  printf '%s\n' "$REPO_DIR/patches/starship-v${STARSHIP_UPGRADE_PATCH_VERSION}-upgrade.patch"
+}
+
+# Copy repo's starship.toml to $1, applying USERPROFILE substitution and upgrade patch.
 apply_starship_transform() {
   local dst="$1"
   cp "$REPO_DIR/.config/starship.toml" "$dst"
   local _up
   _up="$(_get_userprofile)"
   [ -n "$_up" ] && sed -i "s|${STARSHIP_PLACEHOLDER}|${_up}|g" "$dst" || true
-  local _ver=""
-  command -v starship > /dev/null 2>&1 && \
-    _ver="$(starship --version 2>/dev/null </dev/null | awk 'NR==1{print $2}')" || true
-  if [ -n "$_ver" ] && version_lt "$_ver" "1.23.0"; then
-    patch -s "$dst" < "$REPO_DIR/patches/starship-v1.22.1-compat.patch"
-  fi
+  local _patch
+  _patch="$(_starship_patch_for_installed_version)"
+  [ -n "$_patch" ] && patch -s "$dst" < "$_patch" || true
 }
 
-# Reverse USERPROFILE substitution on $1 in-place. Best-effort compat patch reversal.
+# Reverse USERPROFILE substitution on $1 in-place. Best-effort upgrade patch reversal.
 reverse_starship_transform() {
   local file="$1"
   local _up
   _up="$(_get_userprofile)"
   [ -n "$_up" ] && sed -i "s|${_up}|${STARSHIP_PLACEHOLDER}|g" "$file" || true
-  local _ver=""
-  command -v starship > /dev/null 2>&1 && \
-    _ver="$(starship --version 2>/dev/null </dev/null | awk 'NR==1{print $2}')" || true
-  if [ -n "$_ver" ] && version_lt "$_ver" "1.23.0"; then
-    if patch -R --dry-run -s "$file" < "$REPO_DIR/patches/starship-v1.22.1-compat.patch" \
-        > /dev/null 2>&1; then
-      patch -R -s "$file" < "$REPO_DIR/patches/starship-v1.22.1-compat.patch"
-    else
-      warn "Could not reverse starship compat patch — review .config/starship.toml manually before committing."
-    fi
+  local _patch
+  _patch="$(_starship_patch_for_installed_version)"
+  [ -n "$_patch" ] || return 0
+  if patch -R --dry-run -s "$file" < "$_patch" > /dev/null 2>&1; then
+    patch -R -s "$file" < "$_patch"
+  else
+    warn "Could not reverse starship upgrade patch — review .config/starship.toml manually before committing."
   fi
 }
 

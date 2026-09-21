@@ -2,7 +2,7 @@
 # import.sh — Copy locally edited config files back into the repo.
 #
 # For each tracked dotfile, the $HOME version is copied into the repo.
-# starship.toml has its USERPROFILE path and compat patch reversed.
+# starship.toml has its USERPROFILE path and upgrade patch reversed.
 # After copying, git diff is shown and commit/push instructions are printed.
 # Nothing is committed automatically.
 #

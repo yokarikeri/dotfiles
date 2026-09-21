@@ -29,6 +29,9 @@ The result is a modern-by-default dev environment that you can adapt to your own
 - **No Zsh framework**
 - **Prompt: [Starship 1.22.1](https://packages.ubuntu.com/resolute/starship) (resolute/universe)**
   - configured at [`.config/starship.toml`](.config/starship.toml), Powerlevel10k classic style
+  - the config targets v1.22.1; on Starship v1.23.0 or later the install scripts apply
+    [`patches/starship-v1.23.0-upgrade.patch`](patches/starship-v1.23.0-upgrade.patch)
+    to add the newer module sections
 - **Package management: [apt](https://packages.ubuntu.com/resolute/apt) + [mise](https://mise.jdx.dev/)**
   - Ubuntu official repos by default; [mise](.config/mise/config.toml) available when you need
     the latest version of a tool
@@ -109,6 +112,8 @@ graph TD
 ├── docs/
 │   ├── windows-setup.md               # Finishing the Windows setup (manual)
 │   └── ubuntu-pro-for-wsl.md          # Ubuntu Pro for WSL setup (optional)
+├── patches/
+│   └── starship-v1.23.0-upgrade.patch  # Applied when Starship >= 1.23.0 is installed
 ├── windows/
 │   ├── cloud-init/
 │   │   ├── Ubuntu-26.04.user-data          # cloud-init user-data (main; systemd + Docker CE)
