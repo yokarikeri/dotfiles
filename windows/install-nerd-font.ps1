@@ -36,6 +36,14 @@ $ProgressPreference = 'SilentlyContinue'
 #   InstalledGlob wildcard matching the installed files in the fonts folder
 
 $FontCatalog = [ordered]@{
+    'JetBrainsMono' = @{
+        DisplayName   = 'JetBrainsMono NL Nerd Font'
+        Repo          = 'JetBrains/JetBrainsMono'
+        AssetPattern  = '^JetBrainsMono-.*\.zip$'
+        # The archive also ships the non-NL variant and variable-weight fonts.
+        SourcePattern = '\\fonts\\ttf\\JetBrainsMonoNL-[^\\]+\.ttf$'
+        InstalledGlob = 'JetBrainsMonoNL-*.ttf'
+    }
     'PlemolJP' = @{
         DisplayName   = 'PlemolJP Console NF'
         Repo          = 'yuru7/PlemolJP'
@@ -45,9 +53,53 @@ $FontCatalog = [ordered]@{
         # "_0" suffixed files are leftovers from a failed overwrite.
         InstalledGlob = 'PlemolJPConsoleNF-*.tt?'
     }
+    # Sarasa Gothic ships one archive per script/region; each is a separate
+    # catalogue entry so they can be installed independently.
+    'SarasaCL' = @{
+        DisplayName   = 'Sarasa Term CL Nerd Font'
+        Repo          = 'jonz94/Sarasa-Gothic-Nerd-Fonts'
+        AssetPattern  = '^sarasa-term-cl-nerd-font\.zip$'
+        SourcePattern = '\\sarasa-term-cl-[^\\]+-nerd-font\.ttf$'
+        InstalledGlob = 'sarasa-term-cl-*-nerd-font.ttf'
+    }
+    'SarasaHC' = @{
+        DisplayName   = 'Sarasa Term HC Nerd Font'
+        Repo          = 'jonz94/Sarasa-Gothic-Nerd-Fonts'
+        AssetPattern  = '^sarasa-term-hc-nerd-font\.zip$'
+        SourcePattern = '\\sarasa-term-hc-[^\\]+-nerd-font\.ttf$'
+        InstalledGlob = 'sarasa-term-hc-*-nerd-font.ttf'
+    }
+    'SarasaJ' = @{
+        DisplayName   = 'Sarasa Term J Nerd Font'
+        Repo          = 'jonz94/Sarasa-Gothic-Nerd-Fonts'
+        AssetPattern  = '^sarasa-term-j-nerd-font\.zip$'
+        SourcePattern = '\\sarasa-term-j-[^\\]+-nerd-font\.ttf$'
+        InstalledGlob = 'sarasa-term-j-*-nerd-font.ttf'
+    }
+    'SarasaK' = @{
+        DisplayName   = 'Sarasa Term K Nerd Font'
+        Repo          = 'jonz94/Sarasa-Gothic-Nerd-Fonts'
+        AssetPattern  = '^sarasa-term-k-nerd-font\.zip$'
+        SourcePattern = '\\sarasa-term-k-[^\\]+-nerd-font\.ttf$'
+        InstalledGlob = 'sarasa-term-k-*-nerd-font.ttf'
+    }
+    'SarasaSC' = @{
+        DisplayName   = 'Sarasa Term SC Nerd Font'
+        Repo          = 'jonz94/Sarasa-Gothic-Nerd-Fonts'
+        AssetPattern  = '^sarasa-term-sc-nerd-font\.zip$'
+        SourcePattern = '\\sarasa-term-sc-[^\\]+-nerd-font\.ttf$'
+        InstalledGlob = 'sarasa-term-sc-*-nerd-font.ttf'
+    }
+    'SarasaTC' = @{
+        DisplayName   = 'Sarasa Term TC Nerd Font'
+        Repo          = 'jonz94/Sarasa-Gothic-Nerd-Fonts'
+        AssetPattern  = '^sarasa-term-tc-nerd-font\.zip$'
+        SourcePattern = '\\sarasa-term-tc-[^\\]+-nerd-font\.ttf$'
+        InstalledGlob = 'sarasa-term-tc-*-nerd-font.ttf'
+    }
 }
 
-$DefaultFonts = @('PlemolJP')
+$DefaultFonts = @('JetBrainsMono')
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -168,8 +168,10 @@ Next steps
 Install a Nerd Font (required)
   The prompt and CLI tools in this environment draw glyphs that only a
   Nerd Font provides, so pick one of:
-  - install PlemolJP Console NF with the bundled script, as a REGULAR user
-    (not elevated, so it installs for your account only):
+  - install one with the bundled script, as a REGULAR user (not elevated, so
+    it installs for your account only). Defaults to JetBrainsMono NL; -List
+    shows the full catalogue, including Nerd Fonts for Japanese, Korean, and
+    Chinese:
       powershell -ExecutionPolicy Bypass -File .\install-nerd-font.ps1
       powershell -ExecutionPolicy Bypass -File .\install-nerd-font.ps1 -List
     (not next to setup.ps1? get it from windows/install-nerd-font.ps1 in the repo)

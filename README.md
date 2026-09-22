@@ -179,7 +179,9 @@ Run [windows/setup.ps1](windows/setup.ps1) on the Windows host. It:
 - Enables WSL
 - Installs Windows Terminal, Git for Windows, and VS Code via winget
   (package list in [windows/packages.csv](windows/packages.csv))
-- Installs the PlemolJP NF console font
+- Prints next steps for installing a Nerd Font (required for the prompt/CLI
+  glyphs) via `windows/install-nerd-font.ps1`, which offers several fonts —
+  or use one of your own
 - Places `~\.cloud-init\Ubuntu-26.04.user-data` and `~\.cloud-init\Ubuntu-26.04-devcli.user-data` so WSL picks them up automatically
 
 ```powershell

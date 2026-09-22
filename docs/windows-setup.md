@@ -18,7 +18,12 @@ extension pack so VS Code can open files inside WSL.
 
 ## Windows Terminal
 
-- Set the font to **PlemolJP NF Console** (installed by `setup.ps1`) in  
+- Install a Nerd Font with `windows/install-nerd-font.ps1` (`setup.ps1`'s
+  next-steps output has the exact command), or use one of your own. The
+  script defaults to **JetBrainsMono NL Nerd Font**; run it with `-List` to
+  see the full catalogue, which also has Nerd Fonts for Japanese, Korean,
+  and Chinese.
+- Set the installed (or your own) font in  
   Settings → Profiles → Default → Appearance → Font face.
 - Recommended: set the bell notification style to **Flash window** in  
   Settings → Appearance → Bell notification style.
