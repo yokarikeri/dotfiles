@@ -62,11 +62,20 @@ version_lt() {
 # Resolve the real Linux path of Windows USERPROFILE, or print nothing.
 # Uses </dev/null on external commands so stdin is not consumed when called
 # from inside a read loop that has a pipe as its stdin.
+#
+# wslvar is looked up by path, not via `command -v`: this runs from
+# cloud-init's runcmd as a plain non-login `sh`, which never sources
+# .zshenv/12-path.zsh, so PATH has no ~/.local/bin at that point regardless
+# of install order. The repo copy is always present as a fallback.
 _get_userprofile() {
-  if command -v wslvar > /dev/null 2>&1 && command -v wslpath > /dev/null 2>&1; then
-    _wp="$(wslvar USERPROFILE 2>/dev/null </dev/null)"
-    [ -n "$_wp" ] && wslpath "$_wp" 2>/dev/null </dev/null || true
-  fi
+  local _wslvar
+  for _wslvar in "$HOME/.local/bin/wslvar" "$REPO_DIR/.local/bin/wslvar"; do
+    [ -x "$_wslvar" ] && break
+  done
+  [ -x "$_wslvar" ] || return 0
+  command -v wslpath > /dev/null 2>&1 || return 0
+  _wp="$("$_wslvar" USERPROFILE 2>/dev/null </dev/null)"
+  [ -n "$_wp" ] && wslpath "$_wp" 2>/dev/null </dev/null || true
 }
 
 STARSHIP_PLACEHOLDER='/mnt/c/Users/username'
