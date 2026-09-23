@@ -7,25 +7,46 @@
 # to real files automatically.
 #
 # Usage:
-#   sh install.sh [-y] [--clean]
+#   sh install.sh [-y] [--clean] [--ssh-key <name>]...
 #
-#   -y, --yes  Skip the confirmation prompt.
-#   --clean    After copying, remove files that a previous install placed in
-#              $HOME but that are no longer tracked by the repo.
+#   -y, --yes         Skip the confirmation prompt.
+#   --clean           After copying, remove files that a previous install placed
+#                     in $HOME but that are no longer tracked by the repo.
+#   --ssh-key <name>  Copy the SSH key pair <name> and <name>.pub from Windows
+#                     %USERPROFILE%\.ssh to ~/.ssh. Repeatable. Keys that are
+#                     missing on Windows or already present in ~/.ssh are skipped.
 
 set -eu
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$REPO_DIR/lib.sh"
 
+USAGE='Usage: sh install.sh [-y] [--clean] [--ssh-key <name>]...'
+
 ASSUME_YES=0
 DO_CLEAN=0
+SSH_KEYS=''
 
-for _arg do
-  case "$_arg" in
+while [ $# -gt 0 ]; do
+  case "$1" in
     -y|--yes) ASSUME_YES=1 ;;
     --clean)  DO_CLEAN=1   ;;
-    *) die "Unknown option: $_arg. Usage: sh install.sh [-y] [--clean]" ;;
+    --ssh-key)
+      [ $# -ge 2 ] && [ -n "$2" ] || die "--ssh-key requires a name. $USAGE"
+      SSH_KEYS="$SSH_KEYS $2"
+      shift
+      ;;
+    --ssh-key=?*) SSH_KEYS="$SSH_KEYS ${1#--ssh-key=}" ;;
+    *) die "Unknown option: $1. $USAGE" ;;
+  esac
+  shift
+done
+
+# Restricting the charset keeps the unquoted $SSH_KEYS loops safe from
+# word splitting and globbing.
+for _key in $SSH_KEYS; do
+  case "$_key" in
+    *[!A-Za-z0-9._-]*|.*) die "--ssh-key expects a plain file name: $_key" ;;
   esac
 done
 
@@ -39,7 +60,11 @@ _files="$(managed_files)"
 _count="$(printf '%s\n' "$_files" | grep -c '.')"
 
 printf '  %d file(s) will be copied to %s.\n' "$_count" "$HOME"
-printf '  Existing files will be overwritten.\n\n'
+printf '  Existing files will be overwritten.\n'
+if [ -n "$SSH_KEYS" ]; then
+  printf '  SSH key pair(s) to copy from Windows:%s\n' "$SSH_KEYS"
+fi
+printf '\n'
 
 confirm "Proceed?" || { printf '\nAborted.\n\n'; exit 0; }
 printf '\n'
@@ -73,6 +98,13 @@ if [ "$DO_CLEAN" = "1" ]; then
       fi
     done < "$MANIFEST_FILE"
   fi
+fi
+
+if [ -n "$SSH_KEYS" ]; then
+  printf '\nCopying SSH keys from Windows...\n'
+  for _key in $SSH_KEYS; do
+    copy_ssh_key "$_key"
+  done
 fi
 
 write_manifest

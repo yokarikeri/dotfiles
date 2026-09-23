@@ -209,7 +209,8 @@ runcmd:
   # dotfiles
   # Fork this repo on GitHub and replace the URL below with your fork's URL.
   - sudo -u wsl-user git clone https://github.com/yokarikeri/dotfiles.git /home/wsl-user/.dotfiles
-  - sudo -u wsl-user sh /home/wsl-user/.dotfiles/install.sh -y
+  # --ssh-key copies %USERPROFILE%\.ssh\id_ed25519{,.pub} to ~/.ssh when present on Windows.
+  - sudo -u wsl-user sh /home/wsl-user/.dotfiles/install.sh -y --ssh-key id_ed25519
 
   # editor: Nano -> Vim
   - update-alternatives --set editor /usr/bin/vim.basic

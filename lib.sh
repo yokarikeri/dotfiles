@@ -157,3 +157,35 @@ copy_one() {
 
   case "$relpath" in .local/bin/*) chmod +x "$dst" ;; esac
 }
+
+# ---------------------------------------------------------------------------
+# SSH keys
+
+# Copy the SSH key pair <name> from Windows %USERPROFILE%\.ssh to ~/.ssh.
+# Existing keys in ~/.ssh are never overwritten.
+copy_ssh_key() {
+  local name="$1"
+  local _up _src _dst
+  _up="$(_get_userprofile)"
+  if [ -z "$_up" ]; then
+    warn "SSH key $name: Windows USERPROFILE not available; skipped."
+    return 0
+  fi
+  _src="$_up/.ssh/$name"
+  _dst="$HOME/.ssh/$name"
+  if [ ! -f "$_src" ] || [ ! -f "$_src.pub" ]; then
+    warn "SSH key $name: $_src{,.pub} not found; skipped."
+    return 0
+  fi
+  if [ -e "$_dst" ] || [ -e "$_dst.pub" ]; then
+    warn "SSH key $name: $_dst{,.pub} already exists; not overwritten."
+    return 0
+  fi
+  mkdir -p "$HOME/.ssh"
+  chmod 700 "$HOME/.ssh"
+  (umask 077; cp "$_src" "$_dst")
+  cp "$_src.pub" "$_dst.pub"
+  chmod 600 "$_dst"
+  chmod 644 "$_dst.pub"
+  ok "$_dst{,.pub} (from $_src)"
+}

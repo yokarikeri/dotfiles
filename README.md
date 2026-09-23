@@ -21,7 +21,8 @@ The result is a modern-by-default dev environment that you can adapt to your own
   - Config split by role into [`conf.d/*.zsh`](.config/zsh/conf.d/) files, sourced in numeric order
   - `Ctrl-r` — fzf [command history](.config/zsh/conf.d/31-fzf.zsh) search
   - `Ctrl-s` — fzf [recent-directory](.config/zsh/conf.d/31-fzf.zsh) search
-  - [SSH agent auto-start](.config/zsh/conf.d/31-ssh-agent.zsh)
+  - [SSH agent auto-start](.config/zsh/conf.d/31-ssh-agent.zsh), with an interactive
+    prompt to copy or generate a missing key (see [SSH keys](#ssh-keys))
   - [tmux auto-start](.config/zsh/conf.d/91-tmux.zsh)
   - Only zsh-users plugins: `zsh-completions`, `zsh-autosuggestions`,
     `zsh-syntax-highlighting`, `zsh-history-substring-search` —
@@ -170,7 +171,8 @@ Follow these steps in order:
    ```
 
    cloud-init picks up the matching file from `windows/cloud-init/` automatically,
-   installs packages, clones the repo, and runs `install.sh -y`.
+   installs packages, clones the repo, and runs `install.sh -y --ssh-key id_ed25519`
+   (copies `%USERPROFILE%\.ssh\id_ed25519{,.pub}` into `~/.ssh/` if present on Windows).
 
 #### Step 1 in detail — Prepare Windows 11
 
@@ -204,6 +206,14 @@ A confirmation prompt lists the files to be copied. Pass `-y` to skip it
 sh ~/.dotfiles/install.sh -y
 ```
 
+To also copy SSH key pairs from Windows (`%USERPROFILE%\.ssh\<name>{,.pub}`)
+into `~/.ssh/`, pass `--ssh-key <name>` (repeatable). Keys missing on Windows
+or already present in `~/.ssh/` are skipped with a warning:
+
+```sh
+sh ~/.dotfiles/install.sh --ssh-key id_ed25519
+```
+
 Open a new shell. On first start, missing zsh plugins are cloned automatically.
 
 Re-running `install.sh` is safe — it overwrites managed files and migrates any
@@ -231,6 +241,33 @@ the commands to commit and push. It does not commit anything automatically.
 
 No manual wiring in `install.sh` is needed — `install.sh` auto-discovers all
 git-tracked files under `.zshenv`, `.config/`, `.claude/`, and `.local/bin/`.
+
+### SSH keys
+
+[`31-ssh-agent.zsh`](.config/zsh/conf.d/31-ssh-agent.zsh) starts (or reuses)
+`ssh-agent` and loads the keys listed in its zstyle:
+
+```zsh
+zstyle ':ssh-agent' ids 'id_ed25519'   # bare names resolve to ~/.ssh/<name>
+```
+
+When a listed key pair is not in `~/.ssh/`, an interactive shell asks:
+
+1. **Generate a key pair?** — if not, the key is skipped
+2. **Where from?** (only when Windows interop is available)
+   - copy the Windows key pair from `%USERPROFILE%\.ssh\`; if it does not exist
+     there, it is first generated with Windows OpenSSH (`ssh-keygen.exe`)
+   - generate on Ubuntu only
+3. **Passphrase?** (only when a new key is generated) — set one or leave it empty
+
+Every prompt can be skipped. Skipped or failed keys are not loaded, and the SSH
+agent is not started when no key is left; the prompt appears again in the next
+shell. New keys are ed25519 with the comment `<git user.email> <hostname>`.
+Run `ssh_ensure_key ~/.ssh/<name>` to go through the prompts manually.
+
+Keys are **copied** from Windows rather than shared through a named-pipe relay
+such as `npiperelay`, to keep dependencies minimal. As a trade-off, later changes
+on Windows (e.g. deleting or rotating a key) are not reflected on Ubuntu.
 
 ### Managing tools with mise
 
