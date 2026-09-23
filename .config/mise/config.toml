@@ -70,6 +70,12 @@
 # ref. https://mise.jdx.dev/tips-and-tricks.html#minimum-release-age
 install_before = "7d"
 
+# Use bun for npm-backend tools, since core:bun is already installed below
+npm.package_manager = "bun" # auto, npm, aube, aube_cli, bun, pnpm
+
+# Use uvx for pipx-backend tools, since aqua:astral-sh/uv is already installed below
+pypi.uvx = true
+
 # (Example) Disable backends
 # ref. https://mise.jdx.dev/dev-tools/backend_architecture.html#disable-backends
 # ref. https://mise.jdx.dev/dev-tools/backend_architecture.html#backend-capabilities-comparison
@@ -86,9 +92,9 @@ install_before = "7d"
 
 ## Runtime
 "core:node" = "lts"              # cf. mise ls-remote core:node | grep -oP '^\d+' | uniq | awk -F. '$1 % 2 == 0' | tail -n 10
+"core:bun" = "latest"
 "core:python" = "latest"         # cf. mise ls-remote core:python | grep -xP '[\d.]+' | grep -oP '^\d+\.\d+' | uniq | tail -n 10
 "aqua:astral-sh/uv" = "latest"
-# "core:bun" = "latest"
 # "core:deno" = "latest"
 # "core:dotnet" = "latest"
 # "core:elixir" = "latest"
@@ -99,7 +105,6 @@ install_before = "7d"
 # "core:rust" = "latest"
 # "core:swift" = "latest"
 # "core:zig" = "latest"
-# "npm:pnpm" = "latest"          # cf. mise ls-remote npm:pnpm | grep -xP '[\d.]+' | grep -oP '^\d+' | uniq | tail -n 10
 # "github:aquaproj/aqua" = "latest"
 
 ## Shell
@@ -189,6 +194,7 @@ install_before = "7d"
 # "aqua:github/copilot-cli" = "latest"                    # GitHub Copilot CLI
 
 ## Cloud
+# "aqua:hashicorp/terraform" = "latest"                            # Terraform
 # "aqua:aws/aws-cli" = { version = "latest", symlink_bins = true } # AWS CLI v2 (aws)
 # "vfox:mise-plugins/vfox-gcloud" = "latest"                       # Google Cloud CLI (gcloud)
 # "pipx:azure-cli" = "latest"                                      # Azure CLI (az)
