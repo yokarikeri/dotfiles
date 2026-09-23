@@ -76,26 +76,40 @@ function gen_win_wrapper {
   chmod +x "$wrapper_path"
 }
 
-gen_win_wrapper "$systemroot/explorer.exe"
 gen_win_wrapper "$LOCALAPPDATA/Programs/Microsoft VS Code/bin/code"
+gen_win_wrapper "$systemroot/explorer.exe"
+gen_win_wrapper "$systemroot/System32/where.exe"
+
+# gen_win_wrapper "$LOCALAPPDATA/Microsoft/WindowsApps/pwsh.exe"
+# gen_win_wrapper "$ProgramFiles/PowerShell/7/pwsh.exe" # %ProgramFiles%\WindowsApps cannot be used because it lacks execution permissions
+# gen_win_wrapper "$systemroot/System32/WindowsPowerShell/v1.0/powershell.exe"
+# gen_win_wrapper "$systemroot/System32/cmd.exe"
+
 # gen_win_wrapper "$LOCALAPPDATA/Microsoft/WindowsApps/wsl.exe"
 # gen_win_wrapper "$LOCALAPPDATA/Microsoft/WindowsApps/wslconfig.exe"
+# gen_win_wrapper "$LOCALAPPDATA/Microsoft/WindowsApps/bash.exe"
+# gen_win_wrapper "$systemroot/System32/nvidia-smi.exe"
+
 # gen_win_wrapper "$systemroot/notepad.exe"
 # gen_win_wrapper "$systemroot/py.exe"
 # gen_win_wrapper "$systemroot/pyw.exe"
 # gen_win_wrapper "$systemroot/regedit.exe"
-# gen_win_wrapper "$systemroot/System32/cmd.exe"
-# gen_win_wrapper "$systemroot/System32/WindowsPowerShell/v1.0/powershell.exe"
-# gen_win_wrapper "$ProgramFiles/PowerShell/7/pwsh.exe" # %ProgramFiles%\WindowsApps cannot be used because it lacks execution permissions
+
+# gen_win_wrapper "$systemroot/System32/Robocopy.exe"
+# gen_win_wrapper "$systemroot/System32/takeown.exe"
+# gen_win_wrapper "$systemroot/System32/compact.exe"
+# gen_win_wrapper "$systemroot/System32/quser.exe"
+# gen_win_wrapper "$systemroot/System32/qwinsta.exe"
+# gen_win_wrapper "$systemroot/System32/powercfg.exe"
+# gen_win_wrapper "$systemroot/System32/powercfg.exe"
 
 # # Generate wrappers for all .exe files under a directory:
 # #   (N) = null glob (skip missing paths)
 # #   (.) = regular files only (same as -type f)
-#
-# local exe
-# for exe in "$systemroot/system32"/*.exe(N.); do
-#   gen_win_wrapper "$exe"
-# done
+local exe
+for exe in $systemroot/system32/OpenSSH/*.exe(N.); do
+  gen_win_wrapper "$exe"
+done
 # for exe in "$LOCALAPPDATA/Microsoft/WindowsApps"/*.exe(N.); do
 #   gen_win_wrapper "$exe"
 # done
