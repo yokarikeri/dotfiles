@@ -194,6 +194,24 @@ irm https://raw.githubusercontent.com/yokarikeri/dotfiles/refs/heads/main/window
 powershell -ExecutionPolicy Bypass -File .\setup.ps1
 ```
 
+Options:
+
+- `-Interactive` — choose steps, individual winget packages, user-data files,
+  and the values below at prompts, then confirm a summary before anything runs
+- `-SkipWsl` / `-SkipPackages` / `-SkipUserData` — skip a step
+- `-Locale` (default `ja_JP.UTF-8`), `-Timezone` (default `Asia/Tokyo`),
+  `-UserName` (default `wsl-user`), `-DotfilesRepo` (default: derived from
+  `$RepoBase`) — substituted into the placed user-data files. A non-`ja_*`
+  locale also comments out the Japanese language/man page packages.
+- `-Agents` — AI agent CLIs to install via cloud-init, comma-separated or `all`:
+  `claude`, `codex`, `antigravity`, `copilot` (only `Ubuntu-26.04.user-data`
+  has the installers)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\setup.ps1 -Interactive
+powershell -ExecutionPolicy Bypass -File .\setup.ps1 -SkipPackages -Locale en_US.UTF-8 -Timezone Europe/London -Agents claude,codex
+```
+
 ### Installing on an existing machine
 
 ```sh
@@ -326,6 +344,10 @@ Fork this repo on GitHub, then update these references to point to your fork:
 - [`windows/cloud-init/Ubuntu-26.04.user-data`](windows/cloud-init/Ubuntu-26.04.user-data) line ~182 — the `git clone` URL used by cloud-init
 - [`windows/cloud-init/Ubuntu-26.04-devcli.user-data`](windows/cloud-init/Ubuntu-26.04-devcli.user-data) line ~188 — same, for the optional secondary instance
 - [`windows/setup.ps1`](windows/setup.ps1) `$RepoBase` variable — the raw URL base used to fetch `packages.csv` and the user-data files
+
+If you only change `$RepoBase`, `setup.ps1` derives the clone URL from it and
+rewrites the user-data files it places, so the two user-data edits above are
+optional (or pass `-DotfilesRepo <url>` without editing anything).
 
 **Initial setup**
 

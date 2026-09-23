@@ -22,7 +22,6 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
 
 ssh_deletekeys: true
-ssh_genkeytypes: [ed25519]
 
 apt:
   sources:
