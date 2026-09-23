@@ -58,6 +58,13 @@ set expandtab         " Use spaces instead of tabs
 autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif
 
 " -------------------------------------------------------------------------
+" Safety
+" -------------------------------------------------------------------------
+" ZZ (save & quit) is too easy to trigger by accident; disable it and
+" explain why instead of silently doing nothing
+"nnoremap ZZ :echo 'ZZ is disabled (would save & quit)'<CR>
+
+" -------------------------------------------------------------------------
 " Backup & Swap files
 " -------------------------------------------------------------------------
 set noswapfile        " Disable swap files
