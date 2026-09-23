@@ -4,7 +4,8 @@
 # For each tracked dotfile, the $HOME version is copied into the repo.
 # starship.toml has its USERPROFILE path and upgrade patch reversed.
 # After copying, git diff is shown and commit/push instructions are printed.
-# Nothing is committed automatically.
+# Nothing is committed automatically. To import only some files, use the
+# drift viewer instead: sh install.sh --drift
 #
 # Usage:
 #   sh import.sh
@@ -22,23 +23,11 @@ _tmpfile="$(mktemp)"
 trap 'rm -f "$_tmpfile"' EXIT
 tracked_files > "$_tmpfile"
 while IFS= read -r _f; do
-  _home_src="$HOME/$_f"
-  _repo_dst="$REPO_DIR/$_f"
-
-  if [ ! -f "$_home_src" ]; then
+  if [ ! -f "$HOME/$_f" ]; then
     info "Skipping $HOME/$_f (not installed)"
     continue
   fi
-
-  mkdir -p "$(dirname "$_repo_dst")"
-  cp -p "$_home_src" "$_repo_dst"
-
-  if [ "$_f" = ".config/starship.toml" ]; then
-    reverse_starship_transform "$_repo_dst"
-    ok "$_repo_dst (transform reversed)"
-  else
-    ok "$_repo_dst"
-  fi
+  import_one "$_f"
 done < "$_tmpfile"
 
 printf '\n'

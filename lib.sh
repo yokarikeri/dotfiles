@@ -45,9 +45,23 @@ managed_files() {
   fi
 }
 
+# Print manifest entries that are no longer managed but still exist in $HOME.
+stale_files() {
+  [ -f "$MANIFEST_FILE" ] || return 0
+  managed_files | awk 'NR == FNR { m[$0]; next } !($0 in m)' - "$MANIFEST_FILE" \
+    | while IFS= read -r _f; do
+        if [ -e "$HOME/$_f" ] || [ -L "$HOME/$_f" ]; then printf '%s\n' "$_f"; fi
+      done
+}
+
+# Stale entries stay in the manifest until they are gone from $HOME, so a
+# later --clean can still find them.
 write_manifest() {
+  local _stale
+  _stale="$(stale_files)"
   mkdir -p "$(dirname "$MANIFEST_FILE")"
-  managed_files | sort -u > "$MANIFEST_FILE"
+  { managed_files; [ -n "$_stale" ] && printf '%s\n' "$_stale"; } \
+    | sort -u > "$MANIFEST_FILE"
   ok "Manifest updated: $MANIFEST_FILE"
 }
 
@@ -126,6 +140,16 @@ reverse_starship_transform() {
 # ---------------------------------------------------------------------------
 # Copy one managed file
 
+# Print the path of a file holding what copy_one writes for <relpath>.
+# starship.toml is rendered into the scratch file $2.
+source_of() {
+  case "$1" in
+    .config/starship.toml)    apply_starship_transform "$2"; printf '%s\n' "$2" ;;
+    .local/bin/tmux-popup.sh) printf '%s\n' "$REPO_DIR/.config/tmux/tmux-popup.sh" ;;
+    *)                        printf '%s\n' "$REPO_DIR/$1" ;;
+  esac
+}
+
 # Copy the repo's version of <relpath> to $HOME/<relpath>.
 # Handles starship transform, tmux-popup.sh source mapping, executable bits,
 # and migration of old repo-pointing symlinks.
@@ -145,17 +169,52 @@ copy_one() {
   if [ "$relpath" = ".config/starship.toml" ]; then
     apply_starship_transform "$dst"
     ok "$dst (transformed)"
-  elif [ "$relpath" = ".local/bin/tmux-popup.sh" ]; then
-    # Source lives under .config/tmux/ in the repo.
-    cp -p "$REPO_DIR/.config/tmux/tmux-popup.sh" "$dst"
-    chmod +x "$dst"
-    ok "$dst"
   else
-    cp -p "$REPO_DIR/$relpath" "$dst"
+    cp -p "$(source_of "$relpath")" "$dst"
     ok "$dst"
   fi
 
   case "$relpath" in .local/bin/*) chmod +x "$dst" ;; esac
+}
+
+# Copy $HOME/<relpath> back into the repo, reversing the starship transform.
+import_one() {
+  local relpath="$1"
+  local dst="$REPO_DIR/$relpath"
+
+  if [ "$relpath" = ".local/bin/tmux-popup.sh" ]; then
+    warn "$HOME/$relpath is derived; edit .config/tmux/tmux-popup.sh instead."
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$dst")"
+  cp -p "$HOME/$relpath" "$dst"
+  if [ "$relpath" = ".config/starship.toml" ]; then
+    reverse_starship_transform "$dst"
+    ok "$dst (transform reversed)"
+  else
+    ok "$dst"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Drift detection
+
+# Print "<status>\t<relpath>" for each file where $HOME and the repo disagree:
+#   M  edited in $HOME
+#   A  missing from $HOME
+#   D  dropped from the repo but still in $HOME
+# $1 is a scratch file used to render starship.toml.
+drift_status() {
+  local _scratch="$1"
+  managed_files | while IFS= read -r _f; do
+    if [ ! -f "$HOME/$_f" ]; then
+      printf 'A\t%s\n' "$_f"
+    elif ! cmp -s "$(source_of "$_f" "$_scratch")" "$HOME/$_f"; then
+      printf 'M\t%s\n' "$_f"
+    fi
+  done
+  stale_files | awk '{ print "D\t" $0 }'
 }
 
 # ---------------------------------------------------------------------------

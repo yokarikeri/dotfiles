@@ -54,8 +54,9 @@ The result is a modern-by-default dev environment that you can adapt to your own
   - Minimal [vim config](.config/vim/vimrc)
 - **Copy-based installer** — `install.sh` copies files from the repo into `$HOME`, prompts for
   confirmation (or pass `-y`), and migrates old symlink-based installs automatically.
-  `--clean` removes files dropped from the repo. New tracked files are picked up on the next
-  `install.sh` run without any manual wiring.
+  `--update` pulls first and keeps local edits, `-i` walks through the choices as a wizard,
+  and `--drift` reviews differences between `$HOME` and the repo in fzf. New tracked files
+  are picked up on the next `install.sh` run without any manual wiring.
 
 ## Architecture
 
@@ -74,22 +75,24 @@ graph TD
 
         Repo -- "<b>install.sh</b><br>Copy tracked files" --> Home
         Home -- "<b>import.sh</b><br>Bring your edits back" --> Repo
-        Repo -- "<b>update.sh</b><br>Apply upstream changes" --> Home
+        Repo -- "<b>install.sh --update</b><br>Apply upstream changes" --> Home
     end
 
     Origin ==> |"git clone\ngit pull"| Repo
     Repo -. "git push" .-> Origin
-    Upstream -. "update.sh --upstream" .-> Repo
+    Upstream -. "install.sh --upstream" .-> Repo
 
     style Repo fill:#f9f2f4,stroke:#d04437
     style Home fill:#e8f4f8,stroke:#128c7e
 ```
 
-| Script       | Purpose                                          |
-| ------------ | ------------------------------------------------ |
-| `install.sh` | Copy tracked files from the repo into `$HOME`    |
-| `import.sh`  | Bring edits made in `$HOME` back into the repo   |
-| `update.sh`  | Pull the latest commits and re-copy into `$HOME` |
+| Command                | Purpose                                                  |
+| ---------------------- | -------------------------------------------------------- |
+| `install.sh`           | Copy tracked files from the repo into `$HOME`            |
+| `install.sh --update`  | Pull the latest commits and re-copy, keeping local edits |
+| `install.sh -i`        | Same, deciding each step in a wizard                     |
+| `install.sh --drift`   | Review and resolve `$HOME` ↔ repo differences in fzf     |
+| `import.sh`            | Bring all edits made in `$HOME` back into the repo       |
 
 ## Directory structure
 
@@ -122,8 +125,7 @@ graph TD
 │   ├── setup.ps1             # Windows 11 base setup script
 │   └── packages.csv          # winget package list for setup.ps1
 ├── lib.sh                    # Shared helpers (sourced by the scripts below)
-├── install.sh                # Copy repo files into $HOME
-├── update.sh                 # Pull latest + re-copy (respects local edits)
+├── install.sh                # Copy repo files into $HOME (also update, wizard, drift viewer)
 ├── import.sh                 # Push $HOME edits back into the repo
 └── uninstall.sh              # Remove the repo clone
 ```
@@ -217,7 +219,18 @@ sh ~/.dotfiles/install.sh --ssh-key id_ed25519
 Open a new shell. On first start, missing zsh plugins are cloned automatically.
 
 Re-running `install.sh` is safe — it overwrites managed files and migrates any
-old symlinks to real files.
+old symlinks to real files. Files you edited in `$HOME` are listed before the
+confirmation prompt; pass `--local keep` to leave them alone, or
+`--local review` to resolve them one by one in the drift viewer afterwards.
+Run `sh ~/.dotfiles/install.sh --help` for all options.
+
+To decide each step interactively — pulling first, what to do with local
+edits, removing files dropped from the repo, and which Windows SSH keys to
+copy — run the wizard:
+
+```sh
+sh ~/.dotfiles/install.sh -i
+```
 
 ## Usage
 
@@ -233,6 +246,30 @@ sh ~/.dotfiles/import.sh
 
 `import.sh` copies changed files into the repo, shows `git diff`, and prints
 the commands to commit and push. It does not commit anything automatically.
+
+### Checking drift
+
+To see which files differ between `$HOME` and the repo and resolve them one
+at a time:
+
+```sh
+sh ~/.dotfiles/install.sh --drift
+```
+
+fzf lists each drifted file with its status (`M` edited in `$HOME`, `A`
+missing from `$HOME`, `D` dropped from the repo) and previews the diff
+(`-` is the repo, `+` is `$HOME`; rendered with `delta` when installed).
+Pass `--direction home-repo` to compare the other way round.
+
+| Key      | Action                                                             |
+| -------- | ------------------------------------------------------------------ |
+| `ctrl-o` | Apply the repo version to `$HOME` (removes `D` files)              |
+| `ctrl-r` | Import the `$HOME` version into the repo (like `import.sh`)        |
+| `alt-v`  | Merge by hand in `vim -d` (`$HOME` file vs. the repo file)         |
+| `tab`    | Select multiple files for `ctrl-o` / `ctrl-r`                      |
+
+The viewer closes once nothing is left. Without fzf or a terminal, the list is
+printed instead.
 
 ### Adding a new dotfile
 
@@ -316,18 +353,18 @@ cd ~/.dotfiles && git add -p && git commit -m "…" && git push
 
 ```sh
 # Fetch and merge changes from the original repo, then re-copy:
-sh ~/.dotfiles/update.sh --upstream
+sh ~/.dotfiles/install.sh --upstream
 ```
 
 Files you have edited locally ("diverged" files) are **not** overwritten —
-their upstream diff is shown instead. Apply small changes manually; for larger
-changes, run `import.sh` first to commit your version, then merge.
+their upstream diff is shown instead. Resolve them with `install.sh --drift`,
+or run `import.sh` first to commit your version, then merge.
 
 **Syncing your fork to another machine**
 
 ```sh
 # On the second machine after cloning your fork and running install.sh:
-sh ~/.dotfiles/update.sh   # pulls from your fork's origin
+sh ~/.dotfiles/install.sh --update   # pulls from your fork's origin
 ```
 
 ### Direct use (no fork)
@@ -342,11 +379,11 @@ sh ~/.dotfiles/install.sh
 **Pulling updates**
 
 ```sh
-sh ~/.dotfiles/update.sh
+sh ~/.dotfiles/install.sh --update
 ```
 
 Files you have edited locally are not overwritten — their diff is shown and
-you can decide whether to apply the upstream changes manually.
+you can apply the upstream changes with `install.sh --drift`.
 
 ## Uninstall
 
