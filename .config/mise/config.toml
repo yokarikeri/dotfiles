@@ -11,7 +11,9 @@
 # --- 1. Info ---
 # mise ls|list                     List installed and active tool versions
 # mise ls-remote <tool>            List runtime versions available for install
+# mise latest <tool>[@<version>]   Resolve the latest matching version (without installing)
 # mise registry                    List available tools to install
+# mise backends                    List built-in backends
 #
 # --- 2. Tool Management ---
 # mise u|use <tool>[@<version>]    Install and add to local config (./.mise.toml)
@@ -19,12 +21,14 @@
 # mise x|exec <tool> -- <cmd>      Execute a command with tool(s) set without modifying current env
 #
 # mise i|install                   Install all missing tools defined in mise.toml (Run after "git clone")
+# mise outdated                    Show outdated tools (check before running "mise upgrade")
 # mise up|upgrade                  Upgrades outdated tools to their latest versions
 # mise dr|doctor                   Check mise installation for possible problems
 #
 # mise rm|remove <tool>            Remove from local config (./.mise.toml). Uninstall if not in use.
 # mise rm|remove -g <tool>         Remove from global config (~/.config/mise/config.toml). Uninstall if not in use.
 # mise uninstall <tool>@<version>  Removes installed tool versions (does not modify mise.toml)
+# mise prune --dry-run             Preview unused tool versions that would be deleted
 #
 # --- 3. Task Management ---
 # mise t|tasks                     List available tasks in the project
@@ -81,11 +85,21 @@ install_before = "7d"
 "aqua:jdx/usage" = "latest" # Used for Mise Completion
 
 ## Runtime
-# "core:node" = "lts"              # cf. mise ls-remote core:node | grep -oP '^\d+' | uniq | awk -F. '$1 % 2 == 0' | tail -n 10
-# "core:python" = "latest"         # cf. mise ls-remote core:python | grep -xP '[\d.]+' | grep -oP '^\d+\.\d+' | uniq | tail -n 10
-# "aqua:astral-sh/uv" = "latest"
-# "npm:pnpm" = "latest"          # cf. mise ls-remote npm:pnpm | grep -xP '[\d.]+' | grep -oP '^\d+' | uniq | tail -n 10
+"core:node" = "lts"              # cf. mise ls-remote core:node | grep -oP '^\d+' | uniq | awk -F. '$1 % 2 == 0' | tail -n 10
+"core:python" = "latest"         # cf. mise ls-remote core:python | grep -xP '[\d.]+' | grep -oP '^\d+\.\d+' | uniq | tail -n 10
+"aqua:astral-sh/uv" = "latest"
 # "core:bun" = "latest"
+# "core:deno" = "latest"
+# "core:dotnet" = "latest"
+# "core:elixir" = "latest"
+# "core:erlang" = "latest"
+# "core:go" = "latest"
+# "core:java" = "latest"
+# "core:ruby" = "latest"
+# "core:rust" = "latest"
+# "core:swift" = "latest"
+# "core:zig" = "latest"
+# "npm:pnpm" = "latest"          # cf. mise ls-remote npm:pnpm | grep -xP '[\d.]+' | grep -oP '^\d+' | uniq | tail -n 10
 # "github:aquaproj/aqua" = "latest"
 
 ## Shell
@@ -96,7 +110,7 @@ install_before = "7d"
 # "github:tmux/tmux-builds" = "latest"       # Terminal multiplexer
 
 ## Git
-# "aqua:cli/cli" = "latest"                      # GitHub’s official command line tool (gh)
+"aqua:cli/cli" = "latest"                        # GitHub’s official command line tool (gh)
 # "aqua:aquasecurity/trivy" = "latest"           # Security scanner
 # "aqua:gitleaks/gitleaks" = "latest"            # Simple secret scanner
 # "aqua:jesseduffield/lazygit" = "latest"        # Git client
@@ -128,11 +142,11 @@ install_before = "7d"
 # "aqua:editorconfig-checker" = "latest" # EditorConfig checker
 
 ## Common CLI tools
+# "aqua:neovim/neovim" = "stable"           # Alternatives for vim
 # "aqua:mikefarah/yq" = "latest"            # YAML processor
 # "aqua:jqlang/jq" = "latest"               # JSON processor
 # "aqua:BurntSushi/ripgrep" = "latest"      # Alternatives for grep
 # "aqua:sharkdp/fd" = "latest"              # Alternatives for find
-# "aqua:neovim/neovim" = "latest"           # Alternatives for vim
 # "aqua:tamasfe/taplo" = "latest"           # TOML toolkit
 # "aqua:sharkdp/bat" = "latest"             # Alternatives for cat
 # "aqua:lycheeverse/lychee" = "latest"      # Link checker
